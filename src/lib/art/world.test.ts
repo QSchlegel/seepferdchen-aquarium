@@ -75,3 +75,42 @@ describe('the looping world', () => {
     expect(sx(700)).toBeCloseTo(200, 5);
   });
 });
+
+describe('things stay where they are when the camera moves', () => {
+  it('keeps a fixture at a fixed screen distance from the camera', () => {
+    place('riff');
+    // a fixture at world 600 must appear 600px right of a camera at 0,
+    // and 100px right of a camera at 500 — it must not ride along
+    setCamera(0);
+    const a = sx(600);
+    setCamera(500);
+    const b = sx(600);
+    expect(a - b).toBeCloseTo(500, 5);
+  });
+
+  it('never lets a fixture jump as it crosses the seam', () => {
+    place('riff');
+    const w = worldWidth();
+    // walk the camera right past the join and watch one fixed point
+    let prev = null as number | null;
+    for (let cam = w - 400; cam <= w + 400; cam += 5) {
+      setCamera(cam);
+      const p = sx(0);              // the point at world 0, i.e. the seam
+      if (prev !== null) {
+        // it should slide smoothly by the step size, never teleport
+        expect(Math.abs(p - prev), `jumped at camera ${cam}`).toBeLessThan(20);
+      }
+      prev = p;
+    }
+  });
+
+  it('gives the widest fixture room before it wraps', () => {
+    place('riff');
+    const w = worldWidth();
+    // the wreck is the widest thing drawn; whatever margin sx uses must be
+    // bigger than it, or half a shipwreck appears on the wrong side
+    setCamera(0);
+    expect(sx(w - 500)).toBeLessThan(0);
+    expect(sx(w - 500)).toBeGreaterThan(-600);
+  });
+});

@@ -67,8 +67,10 @@ export function wrapDelta(a: number, b: number) {
 export function sx(worldX: number) {
   const w = worldWidth();
   let d = ((worldX - CAM) % w + w) % w;
-  // anything further round than a screen-and-a-bit belongs to the left instead
-  if (d > w - W - 120) d -= w;
+  // Anything further round the loop than a screen plus a wide margin belongs
+  // to the left of the camera instead. The margin has to exceed the widest
+  // thing drawn (the wreck) or it pops as it crosses the seam.
+  if (d > w - W - 700) d -= w;
   return d;
 }
 
@@ -376,7 +378,10 @@ function drawSand(){
   ctx.fillStyle = 'rgba(196,166,108,.5)';
   for(let i = 0; i < 70; i++){
     const x = (i * 137.5) % W;
-    ctx.fillRect(x, sandY(CAM + x) + 16 + ((i * 53) % Math.max(20, H - sandY(CAM + x) - 20)), 3, 2);
+    // world-anchored, or the grains slide over ground that is moving past
+    const wx = CAM + x;
+    ctx.fillRect(sx(Math.round(wx / 7) * 7),
+      sandY(wx) + 16 + ((i * 53) % Math.max(20, H - sandY(wx) - 20)), 3, 2);
   }
   ctx.restore();
 
@@ -607,8 +612,9 @@ export function wreckHold() {
 function drawWreck(t, lit = 0){
   if(!scene.wreck) return;
   const p = wreckPos();
+  if(!onScreen(p.x, p.w)) return;
   ctx.save();
-  ctx.translate(p.x, p.y);
+  ctx.translate(sx(p.x), p.y);
   ctx.rotate(-.13);                       // settled at a list, as wrecks do
 
   const hullTop = -p.h * 0.42;
@@ -660,7 +666,7 @@ function drawWreck(t, lit = 0){
   // the hold: a dark mouth that lights up warmly when she is inside it
   const h = wreckHold();
   ctx.save();
-  ctx.translate(h.x, h.y);
+  ctx.translate(sx(h.x), h.y);
   ctx.rotate(-.13);
   ctx.fillStyle = '#0d2233';
   ctx.beginPath(); ctx.ellipse(0, 0, h.rx, h.ry, 0, 0, 7); ctx.fill();
@@ -695,7 +701,8 @@ function drawChest(t, open = 0){
   const p = chestPos();
   // the lid runs past open and rocks back, so the cap sits above 1
   const lift = clamp(open, 0, 1.15);
-  ctx.save(); ctx.translate(p.x, p.y);
+  if(!onScreen(p.x, 140)) return;
+  ctx.save(); ctx.translate(sx(p.x), p.y);
 
   // warm light spilling out, brightest when the lid is right back
   if(lift > .04){
@@ -747,7 +754,7 @@ function drawChest(t, open = 0){
 /** The pearl for the tilt game: iridescent, with a soft glow so it is easy to track. */
 function drawPearl(p, t){
   ctx.save();
-  ctx.translate(p.x, p.y);
+  ctx.translate(sx(p.x), p.y);
   ctx.save();
   ctx.globalAlpha = .28 + .12 * Math.sin(t * 3);
   ctx.fillStyle = '#ffe6f6';
@@ -973,14 +980,15 @@ function drawWayfinding(t: number){
     // the colour of that place, bleeding up into this one's water
     ctx.save();
     ctx.globalAlpha = 0.62 + h.glow * 0.3;
-    const halo = ctx.createRadialGradient(h.x, base, h.r * 0.15, h.x, base, reach);
+    const hx = sx(h.x);
+    const halo = ctx.createRadialGradient(hx, base, h.r * 0.15, hx, base, reach);
     halo.addColorStop(0, hexA(there.water[1], 0.85));
     halo.addColorStop(0.3, hexA(there.water[2], 0.5));
     halo.addColorStop(0.65, hexA(there.water[3], 0.2));
     halo.addColorStop(1, hexA(there.water[3], 0));
     ctx.fillStyle = halo;
     ctx.beginPath();
-    ctx.ellipse(h.x, base, reach, reach * 0.85, 0, 0, 7);
+    ctx.ellipse(hx, base, reach, reach * 0.85, 0, 0, 7);
     ctx.fill();
     ctx.restore();
 
@@ -993,14 +1001,14 @@ function drawWayfinding(t: number){
       const side = i % 2 ? 1 : -1;
       const lane = h.r * (1.5 + (i % 3) * 0.55);
       const flow = ((t * 0.28 + i * 0.2) % 1);
-      const sx = h.x + side * lane * (1 - flow * 0.72);
+      const streakX = hx + side * lane * (1 - flow * 0.72);
       const sy = base - h.r * (0.7 + (i % 3) * 0.42) - Math.sin(flow * 3) * 6;
       const len = h.r * 0.42 * (1 - Math.abs(flow - 0.5) * 1.1);
       if(len <= 0) continue;
       ctx.lineWidth = 2 + (i % 2);
       ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.quadraticCurveTo(sx - side * len * 0.5, sy + 3, sx - side * len, sy + 5);
+      ctx.moveTo(streakX, sy);
+      ctx.quadraticCurveTo(streakX - side * len * 0.5, sy + 3, streakX - side * len, sy + 5);
       ctx.stroke();
     }
     ctx.restore();
@@ -1026,17 +1034,22 @@ function drawRidgeLayer(layer: number, t: number){
   ctx.fill();
 
   // growth along the skyline, so the crest is not a bare drawn line
+  // Anchored to the world on a fixed grid, not to the screen. Keying these on
+  // the camera position re-rolled which tufts existed on every frame, so they
+  // flickered in and out the whole time she was moving.
   const step = 26 + layer * 10;
-  for(let x = 0; x <= W; x += step){
-    const j = hash1(Math.round(CAM + x) * 0.37 + layer * 13 + scene.terrain.seed);
+  const first = Math.floor((CAM - 60) / step) * step;
+  for(let wx = first; wx <= CAM + W + 60; wx += step){
+    const j = hash1(wx * 0.37 + layer * 13 + scene.terrain.seed);
     if(j < 0.45) continue;
-    const gy = ridgeY(layer, CAM + x);
+    const px = sx(wx);
+    const gy = ridgeY(layer, wx);
     const h2 = (6 + j * 22) * (1 - layer * 0.22);
     ctx.beginPath();
-    ctx.moveTo(x - h2 * 0.3, gy + 2);
+    ctx.moveTo(px - h2 * 0.3, gy + 2);
     ctx.quadraticCurveTo(
-      x + Math.sin(t * 0.5 + x) * h2 * 0.18, gy - h2,
-      x + h2 * 0.3, gy + 2
+      px + Math.sin(t * 0.5 + wx) * h2 * 0.18, gy - h2,
+      px + h2 * 0.3, gy + 2
     );
     ctx.closePath();
     ctx.fill();
@@ -1047,7 +1060,7 @@ function drawRidgeLayer(layer: number, t: number){
   if(layer === RIDGE_LAYERS - 1){
     for(const h of headlands){
       ctx.save();
-      ctx.translate(h.x, ridgeY(layer, h.x) + 1);
+      ctx.translate(sx(h.x), ridgeY(layer, h.x) + 1);
       ctx.globalAlpha = 0.3 + h.glow * 0.45;
       ctx.fillStyle = mix(col, (SCENES[h.to as SceneId] ?? SCENES[DEFAULT_SCENE]).water[2], 0.3 + h.glow * 0.4);
       drawVistaShape(h.to, h.r, t);
@@ -1373,7 +1386,7 @@ function drawChestBeacon(t){
   const p = chestPos();
   const pulse = (Math.sin(t * 2.4) + 1) / 2;
   ctx.save();
-  ctx.translate(p.x, p.y - 16);
+  ctx.translate(sx(p.x), p.y - 16);
   ctx.globalAlpha = .2 + .24 * pulse;
   ctx.strokeStyle = '#ffe680'; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.ellipse(0, 0, 48 + pulse * 9, 36 + pulse * 7, 0, 0, 7); ctx.stroke();
