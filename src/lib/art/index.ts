@@ -2724,6 +2724,43 @@ function drawSnail(c, t){
   }
   ctx.stroke();
 
+  // Banding across the whorl. A sea snail's shell is marked across the coil,
+  // not along it, and without this the spiral reads as a flat cinnamon bun.
+  ctx.save();
+  ctx.strokeStyle = darken(c.body, 34);
+  ctx.globalAlpha = .5;
+  ctx.lineWidth = s * .055;
+  ctx.lineCap = 'butt';
+  for(let a2 = 1.1; a2 < 8.5; a2 += .62){
+    const r = s * (.1 + a2 * .108);
+    const cx = -s * .12 + Math.cos(-a2 + 1.1) * r * .95;
+    const cy = -s * .04 + Math.sin(-a2 + 1.1) * r * .8;
+    const nx = Math.cos(-a2 + 1.1), ny = Math.sin(-a2 + 1.1) * .84;
+    ctx.beginPath();
+    ctx.moveTo(cx - nx * s * .17, cy - ny * s * .17);
+    ctx.lineTo(cx + nx * s * .17, cy + ny * s * .17);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // the aperture: the dark mouth of the shell the body comes out of
+  ctx.save();
+  ctx.fillStyle = darken(c.body, 52);
+  ctx.globalAlpha = .55;
+  ctx.beginPath();
+  ctx.ellipse(s * .5, s * .16, s * .2, s * .27, -.35, 0, 7);
+  ctx.fill();
+  ctx.restore();
+
+  /* a soft shadow, so the foot rests on the sand instead of hovering */
+  ctx.save();
+  ctx.globalAlpha = .16;
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.ellipse(s * .1, s * .74, s * .78, s * .1, 0, 0, 7);
+  ctx.fill();
+  ctx.restore();
+
   /* the soft foot, gliding along */
   const fg = ctx.createLinearGradient(0, s * .1, 0, s * .62);
   fg.addColorStop(0, lighten(c.foot || '#e7d3ef', 12));
@@ -2736,6 +2773,7 @@ function drawSnail(c, t){
   ctx.quadraticCurveTo(s * .5, s * .3, -s * .4, s * .24);
   ctx.quadraticCurveTo(-s * .8, s * .34, -s * .62, s * .5);
   ctx.fill();
+  contour(c.foot || '#e7d3ef', Math.max(1, s * .035));
   /* ripple along the foot */
   ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineWidth = Math.max(1, s * .03);
   ctx.beginPath();
@@ -2758,12 +2796,9 @@ function drawSnail(c, t){
     ctx.moveTo(s * (.76 + i * .08), s * .12);
     ctx.quadraticCurveTo(s * (.9 + i * .1), s * -.08, tipx, tipy);
     ctx.stroke();
-    ctx.fillStyle = '#fdfdff';
-    ctx.beginPath(); ctx.ellipse(tipx, tipy, s * .07, s * .085, 0, 0, 7); ctx.fill();
-    ctx.fillStyle = '#2a2038';
-    ctx.beginPath(); ctx.arc(tipx + s * .016, tipy, s * .038, 0, 7); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.9)';
-    ctx.beginPath(); ctx.arc(tipx + s * .004, tipy - s * .028, s * .016, 0, 7); ctx.fill();
+    // drawEye rather than its own circles, so the snail blinks like everyone
+    // else instead of staring
+    drawEye(tipx, tipy, s * .082);
     ctx.fillStyle = fg;
   }
   /* little smile */

@@ -1,91 +1,132 @@
-# Seepferdchen-Aquarium
+# 🐠 Seepferdchen-Aquarium
 
-An interactive aquarium for a five-year-old, set in the world of the
-*Mein Seepferdchenhof* books. Every creature is drawn from scratch with the
-Canvas 2D API — there are no images anywhere in the project.
+An aquarium you can play with, from the world of the *Seepferdchenhof* books.
 
-![routes](docs/screenshot.png)
+**Play it here → [lucilleschlegel.com](https://lucilleschlegel.com)**
 
-## What's in it
+Tap a fish and it says hello. Feed them — but not everyone likes the same food.
+Find the hidden golden key and unlock the treasure chest. Swim off to eight
+other places. Build your own creature and watch it join the others.
 
-**The tank** — around fifty creatures swimming under their own steam. Fish
-chase food pellets, shoals move as one body and swarm a pellet together, the
-seahorse foals follow Stormi wherever he goes, jellyfish drift upward, the crab
-and the snail walk the sea floor. Tap the water to drop food; tap a creature and
-it wiggles, tells you its name and bursts into sparkles.
+---
 
-**Steckbriefe** — a card for everyone who lives here, each with a live animated
-portrait. Tapping a card jumps to the tank and makes that creature announce
-itself. Creatures she has already met get a heart.
+## 🎨 Want to change something?
 
-**Geschichte** — the story of Band 2 in eight short pages, each with the
-character it is about.
+You can. This is a good project to learn on, and **you do not need to be a
+grown-up**. Here is the smallest possible thing you can do.
 
-**Finde-Spiel** — a name appears and four portraits; tap the right one. Wrong
-answers are gentle, the best score is kept.
+### Make a fish a different colour
 
-Settings cover language (German/English), sound, sparkles and a quality level
-for older devices. Everything is stored locally; there is no backend and no
-network traffic after the first load.
-
-## Running it
+**1. Get it running.** In a terminal, in this folder:
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm run build      # static site in ./build
-npm run preview    # serve the built site
-npm test           # simulation unit tests
+npm run dev
 ```
 
-The build is a plain static site — drop `build/` on any web host, or open it
-from a local server. A service worker caches everything on first visit, so once
-it has loaded it works with no connection at all. Add it to the home screen on
-iOS or Android and it opens fullscreen with no browser chrome.
+It prints an address like `http://localhost:5173`. Open that in your browser.
+You should see the aquarium.
 
-## How it fits together
+**2. Open the file with the animals in it.**
 
 ```
-src/lib/
-  art/           every drawing routine: creatures, reef, sea floor
-    index.ts       ~2500 lines of Canvas 2D, bound to a context once
-    extents.ts     bounding boxes, so portraits frame correctly
-  sim/
-    types.ts       the shapes the simulation passes around
-    behaviour.ts   one movement routine per mode (swim, school, follow, …)
-    world.ts       owns creatures and particles, steps and paints a frame
-    world.test.ts  unit tests, run against a stubbed canvas context
-  data/
-    cast.ts        who lives in the tank, and what colour they are
-    story.ts       the story pages and the ticker lines
-    i18n.ts        German and English strings
-  stores/          settings and progress, persisted to localStorage
-  components/      Tank, CreaturePortrait, Nav, SettingsSheet
-src/routes/        one route per section
+src/lib/data/cast.ts
 ```
 
-The simulation is deliberately free of any framework: `World` takes a canvas
-context and a list of creature specs, and exposes `step(dt)`, `draw()` and
-`tap(x, y)`. That is what makes it testable in Node with nothing but a stub
-context, and it keeps the Svelte components thin.
+**3. Find a fish.** Look for a line like this:
 
-### Drawing
+```ts
+{ id: 'coco', name: 'Coco', kind: 'fish', size: 22, body: '#ff5c8a', ... }
+```
 
-Creatures are drawn facing right, centred on the origin; the caller applies
-position, facing and scale with a transform. Bodies are built from bezier and
-arc paths with gradients, so everything stays crisp at any size and there is
-nothing to download.
+`body: '#ff5c8a'` is its colour. Those numbers and letters are a colour code.
 
-### Performance notes
+**4. Change it.** Try `body: '#00ff00'` for bright green. Save the file.
 
-- The canvas backing store is capped at ~3.2 megapixels, because an oversized
-  canvas silently fails to allocate on iOS and renders as a blank rectangle.
-- Creature size scales with the smaller screen dimension, and the shoals are
-  thinned on narrow screens, so a phone shows a calm tank rather than a rush hour.
-- The quality setting trades particle count for frame rate on older hardware.
+**5. Look at your browser.** The fish changed colour. You did that. 🎉
 
-## Credit
+### Colour codes
 
-The characters — Elli, Mona, Maris, Stormi, Finni — come from
-*Mein Seepferdchenhof* by Kathrin Lena Orso and Leonie Engel (Oetinger).
-This is a personal, non-commercial fan project made for one small reader.
+A colour code starts with `#` and has six characters: two for **red**, two for
+**green**, two for **blue**. `00` means none, `ff` means as much as possible.
+
+| Code | Colour |
+|---|---|
+| `#ff0000` | red |
+| `#00ff00` | green |
+| `#0000ff` | blue |
+| `#ffff00` | yellow |
+| `#ff00ff` | pink |
+| `#ffffff` | white |
+| `#000000` | black |
+
+You can also use a [colour picker](https://htmlcolorcodes.com/) and copy the
+code it gives you.
+
+### Then try these
+
+- Give an animal a new name — change `name: 'Coco'`
+- Make a fish bigger or smaller — change `size: 22`
+- Add a sentence to the story — open `src/lib/data/story.ts`
+- Add a new colour to the creature maker — open `src/routes/machen/+page.svelte`
+
+More ideas, sorted from easy to hard, are in **[vault/Backlog.md](vault/Backlog.md)**.
+
+### If something breaks
+
+Nothing you do here can break anything for real. The website that other people
+see does not change until someone deliberately publishes it.
+
+If the aquarium goes blank, undo your change (`Ctrl+Z` / `Cmd+Z`) and save
+again. If you get stuck, that is normal — everyone does.
+
+---
+
+## 🧪 Checking your work
+
+```bash
+npm test      # checks the rules of the aquarium still hold
+npm run check # checks for spelling mistakes in the code
+```
+
+`npm test` is friendly and fast. It knows things like *two animals of the same
+kind must not look alike* — so if you accidentally make two fish the same
+colour, it tells you which two.
+
+---
+
+## 🛠 For grown-ups and agents
+
+| | |
+|---|---|
+| Stack | SvelteKit 2 · Svelte 5 · canvas · no runtime dependencies |
+| Output | static, served by Caddy |
+| Hosting | Railway, behind Cloudflare |
+| Tests | ~100, headless, sub-second |
+
+```bash
+npm run dev     # dev server
+npm test        # tests
+npm run check   # svelte-check
+npm run build   # regenerates the module graph, then builds
+npm run graph   # module graph only
+```
+
+**Documentation** lives in [`vault/`](vault/) as an Obsidian vault — open that
+folder in Obsidian, or just read the Markdown:
+
+- [Design Principles](vault/Design%20Principles.md) — why it is built this way
+- [Architecture](vault/Architecture.md) — how the pieces fit
+- [The Tank](vault/The%20Tank.md) · [The Nine Places](vault/The%20Nine%20Places.md) · [The Cast](vault/The%20Cast.md) · [Games](vault/Games.md)
+- [**Gotchas**](vault/Gotchas.md) — traps that have each caused a real bug. Read this one.
+- [Backlog](vault/Backlog.md) · [Contributing](vault/Contributing.md)
+
+Agents: [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md).
+
+There is a live module graph at `/admin`.
+
+### The one design rule
+
+**She cannot read yet.** Every control is a picture, a colour or a sound; text
+is for the adult nearby. If a feature needs reading to make sense, it needs
+redesigning, not a label. Nothing can be failed, timed or lost.
