@@ -1,0 +1,685 @@
+{
+  "nodes": [
+    {
+      "id": "src/lib/art/extents.ts",
+      "label": "extents",
+      "layer": "art",
+      "loc": 32,
+      "fanIn": 1
+    },
+    {
+      "id": "src/lib/art/index.ts",
+      "label": "index",
+      "layer": "art",
+      "loc": 3118,
+      "fanIn": 5
+    },
+    {
+      "id": "src/lib/audio.ts",
+      "label": "audio",
+      "layer": "lib",
+      "loc": 144,
+      "fanIn": 11
+    },
+    {
+      "id": "src/lib/components/CreaturePortrait.svelte",
+      "label": "CreaturePortrait",
+      "layer": "component",
+      "loc": 61,
+      "fanIn": 6
+    },
+    {
+      "id": "src/lib/components/Maze.svelte",
+      "label": "Maze",
+      "layer": "component",
+      "loc": 223,
+      "fanIn": 1
+    },
+    {
+      "id": "src/lib/components/Meta.svelte",
+      "label": "Meta",
+      "layer": "component",
+      "loc": 40,
+      "fanIn": 9
+    },
+    {
+      "id": "src/lib/components/Nav.svelte",
+      "label": "Nav",
+      "layer": "component",
+      "loc": 166,
+      "fanIn": 1
+    },
+    {
+      "id": "src/lib/components/SettingsSheet.svelte",
+      "label": "SettingsSheet",
+      "layer": "component",
+      "loc": 89,
+      "fanIn": 1
+    },
+    {
+      "id": "src/lib/components/Tank.svelte",
+      "label": "Tank",
+      "layer": "component",
+      "loc": 266,
+      "fanIn": 2
+    },
+    {
+      "id": "src/lib/data/cast.ts",
+      "label": "cast",
+      "layer": "data",
+      "loc": 248,
+      "fanIn": 7
+    },
+    {
+      "id": "src/lib/data/i18n.ts",
+      "label": "i18n",
+      "layer": "data",
+      "loc": 81,
+      "fanIn": 10
+    },
+    {
+      "id": "src/lib/data/scenes.ts",
+      "label": "scenes",
+      "layer": "data",
+      "loc": 214,
+      "fanIn": 4
+    },
+    {
+      "id": "src/lib/data/site.ts",
+      "label": "site",
+      "layer": "data",
+      "loc": 66,
+      "fanIn": 1
+    },
+    {
+      "id": "src/lib/data/story.ts",
+      "label": "story",
+      "layer": "data",
+      "loc": 39,
+      "fanIn": 2
+    },
+    {
+      "id": "src/lib/sim/behaviour.ts",
+      "label": "behaviour",
+      "layer": "sim",
+      "loc": 357,
+      "fanIn": 1
+    },
+    {
+      "id": "src/lib/sim/maze.ts",
+      "label": "maze",
+      "layer": "sim",
+      "loc": 160,
+      "fanIn": 1
+    },
+    {
+      "id": "src/lib/sim/types.ts",
+      "label": "types",
+      "layer": "sim",
+      "loc": 153,
+      "fanIn": 11
+    },
+    {
+      "id": "src/lib/sim/world.ts",
+      "label": "world",
+      "layer": "sim",
+      "loc": 1345,
+      "fanIn": 3
+    },
+    {
+      "id": "src/lib/speech.ts",
+      "label": "speech",
+      "layer": "lib",
+      "loc": 77,
+      "fanIn": 5
+    },
+    {
+      "id": "src/lib/stores/mine.ts",
+      "label": "mine",
+      "layer": "store",
+      "loc": 168,
+      "fanIn": 2
+    },
+    {
+      "id": "src/lib/stores/progress.ts",
+      "label": "progress",
+      "layer": "store",
+      "loc": 57,
+      "fanIn": 5
+    },
+    {
+      "id": "src/lib/stores/settings.ts",
+      "label": "settings",
+      "layer": "store",
+      "loc": 40,
+      "fanIn": 13
+    },
+    {
+      "id": "src/lib/tilt.ts",
+      "label": "tilt",
+      "layer": "lib",
+      "loc": 73,
+      "fanIn": 1
+    },
+    {
+      "id": "src/routes/+layout.svelte",
+      "label": "/",
+      "layer": "route",
+      "loc": 31,
+      "fanIn": 0
+    },
+    {
+      "id": "src/routes/+layout.ts",
+      "label": "/",
+      "layer": "route",
+      "loc": 3,
+      "fanIn": 0
+    },
+    {
+      "id": "src/routes/+page.svelte",
+      "label": "/",
+      "layer": "route",
+      "loc": 347,
+      "fanIn": 0
+    },
+    {
+      "id": "src/routes/admin/+page.svelte",
+      "label": "/admin",
+      "layer": "route",
+      "loc": 265,
+      "fanIn": 0
+    },
+    {
+      "id": "src/routes/geschichte/+page.svelte",
+      "label": "/geschichte",
+      "layer": "route",
+      "loc": 61,
+      "fanIn": 0
+    },
+    {
+      "id": "src/routes/karte/+page.svelte",
+      "label": "/karte",
+      "layer": "route",
+      "loc": 278,
+      "fanIn": 0
+    },
+    {
+      "id": "src/routes/labyrinth/+page.svelte",
+      "label": "/labyrinth",
+      "layer": "route",
+      "loc": 38,
+      "fanIn": 0
+    },
+    {
+      "id": "src/routes/machen/+page.svelte",
+      "label": "/machen",
+      "layer": "route",
+      "loc": 258,
+      "fanIn": 0
+    },
+    {
+      "id": "src/routes/spiel/+page.svelte",
+      "label": "/spiel",
+      "layer": "route",
+      "loc": 166,
+      "fanIn": 0
+    },
+    {
+      "id": "src/routes/steckbriefe/+page.svelte",
+      "label": "/steckbriefe",
+      "layer": "route",
+      "loc": 76,
+      "fanIn": 0
+    },
+    {
+      "id": "src/routes/tippen/+page.svelte",
+      "label": "/tippen",
+      "layer": "route",
+      "loc": 226,
+      "fanIn": 0
+    },
+    {
+      "id": "src/routes/verstecken/+page.svelte",
+      "label": "/verstecken",
+      "layer": "route",
+      "loc": 151,
+      "fanIn": 0
+    },
+    {
+      "id": "src/service-worker.ts",
+      "label": "service-worker",
+      "layer": "lib",
+      "loc": 40,
+      "fanIn": 0
+    },
+    {
+      "id": "src/test/app-environment.ts",
+      "label": "app-environment",
+      "layer": "lib",
+      "loc": 6,
+      "fanIn": 0
+    },
+    {
+      "id": "src/test/stub-canvas.ts",
+      "label": "stub-canvas",
+      "layer": "lib",
+      "loc": 19,
+      "fanIn": 0
+    }
+  ],
+  "links": [
+    {
+      "source": "src/lib/art/index.ts",
+      "target": "src/lib/data/scenes.ts"
+    },
+    {
+      "source": "src/lib/components/CreaturePortrait.svelte",
+      "target": "src/lib/art/index.ts"
+    },
+    {
+      "source": "src/lib/components/CreaturePortrait.svelte",
+      "target": "src/lib/art/extents.ts"
+    },
+    {
+      "source": "src/lib/components/CreaturePortrait.svelte",
+      "target": "src/lib/sim/types.ts"
+    },
+    {
+      "source": "src/lib/components/Maze.svelte",
+      "target": "src/lib/art/index.ts"
+    },
+    {
+      "source": "src/lib/components/Maze.svelte",
+      "target": "src/lib/sim/maze.ts"
+    },
+    {
+      "source": "src/lib/components/Maze.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/lib/components/Maze.svelte",
+      "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/lib/components/Maze.svelte",
+      "target": "src/lib/data/cast.ts"
+    },
+    {
+      "source": "src/lib/components/Maze.svelte",
+      "target": "src/lib/sim/types.ts"
+    },
+    {
+      "source": "src/lib/components/Meta.svelte",
+      "target": "src/lib/data/site.ts"
+    },
+    {
+      "source": "src/lib/components/Nav.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/lib/components/Nav.svelte",
+      "target": "src/lib/data/i18n.ts"
+    },
+    {
+      "source": "src/lib/components/Nav.svelte",
+      "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/lib/components/SettingsSheet.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/lib/components/SettingsSheet.svelte",
+      "target": "src/lib/data/i18n.ts"
+    },
+    {
+      "source": "src/lib/components/SettingsSheet.svelte",
+      "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/lib/components/SettingsSheet.svelte",
+      "target": "src/lib/speech.ts"
+    },
+    {
+      "source": "src/lib/components/Tank.svelte",
+      "target": "src/lib/sim/world.ts"
+    },
+    {
+      "source": "src/lib/components/Tank.svelte",
+      "target": "src/lib/art/index.ts"
+    },
+    {
+      "source": "src/lib/components/Tank.svelte",
+      "target": "src/lib/data/cast.ts"
+    },
+    {
+      "source": "src/lib/components/Tank.svelte",
+      "target": "src/lib/stores/mine.ts"
+    },
+    {
+      "source": "src/lib/components/Tank.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/lib/components/Tank.svelte",
+      "target": "src/lib/stores/progress.ts"
+    },
+    {
+      "source": "src/lib/components/Tank.svelte",
+      "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/lib/components/Tank.svelte",
+      "target": "src/lib/speech.ts"
+    },
+    {
+      "source": "src/lib/components/Tank.svelte",
+      "target": "src/lib/sim/types.ts"
+    },
+    {
+      "source": "src/lib/data/cast.ts",
+      "target": "src/lib/sim/types.ts"
+    },
+    {
+      "source": "src/lib/sim/behaviour.ts",
+      "target": "src/lib/sim/types.ts"
+    },
+    {
+      "source": "src/lib/sim/behaviour.ts",
+      "target": "src/lib/art/index.ts"
+    },
+    {
+      "source": "src/lib/sim/world.ts",
+      "target": "src/lib/art/index.ts"
+    },
+    {
+      "source": "src/lib/sim/world.ts",
+      "target": "src/lib/sim/behaviour.ts"
+    },
+    {
+      "source": "src/lib/sim/world.ts",
+      "target": "src/lib/sim/types.ts"
+    },
+    {
+      "source": "src/lib/sim/world.ts",
+      "target": "src/lib/data/scenes.ts"
+    },
+    {
+      "source": "src/lib/speech.ts",
+      "target": "src/lib/data/i18n.ts"
+    },
+    {
+      "source": "src/lib/stores/mine.ts",
+      "target": "src/lib/sim/types.ts"
+    },
+    {
+      "source": "src/lib/stores/settings.ts",
+      "target": "src/lib/data/i18n.ts"
+    },
+    {
+      "source": "src/lib/stores/settings.ts",
+      "target": "src/lib/data/scenes.ts"
+    },
+    {
+      "source": "src/routes/+layout.svelte",
+      "target": "src/lib/components/Nav.svelte"
+    },
+    {
+      "source": "src/routes/+layout.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/routes/+layout.svelte",
+      "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/routes/+page.svelte",
+      "target": "src/lib/components/Tank.svelte"
+    },
+    {
+      "source": "src/routes/+page.svelte",
+      "target": "src/lib/components/SettingsSheet.svelte"
+    },
+    {
+      "source": "src/routes/+page.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/routes/+page.svelte",
+      "target": "src/lib/stores/progress.ts"
+    },
+    {
+      "source": "src/routes/+page.svelte",
+      "target": "src/lib/data/i18n.ts"
+    },
+    {
+      "source": "src/routes/+page.svelte",
+      "target": "src/lib/data/story.ts"
+    },
+    {
+      "source": "src/routes/+page.svelte",
+      "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/routes/+page.svelte",
+      "target": "src/lib/tilt.ts"
+    },
+    {
+      "source": "src/routes/+page.svelte",
+      "target": "src/lib/sim/world.ts"
+    },
+    {
+      "source": "src/routes/+page.svelte",
+      "target": "src/lib/sim/types.ts"
+    },
+    {
+      "source": "src/routes/+page.svelte",
+      "target": "src/lib/components/Meta.svelte"
+    },
+    {
+      "source": "src/routes/geschichte/+page.svelte",
+      "target": "src/lib/components/CreaturePortrait.svelte"
+    },
+    {
+      "source": "src/routes/geschichte/+page.svelte",
+      "target": "src/lib/data/story.ts"
+    },
+    {
+      "source": "src/routes/geschichte/+page.svelte",
+      "target": "src/lib/data/cast.ts"
+    },
+    {
+      "source": "src/routes/geschichte/+page.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/routes/geschichte/+page.svelte",
+      "target": "src/lib/data/i18n.ts"
+    },
+    {
+      "source": "src/routes/geschichte/+page.svelte",
+      "target": "src/lib/components/Meta.svelte"
+    },
+    {
+      "source": "src/routes/karte/+page.svelte",
+      "target": "src/lib/components/Meta.svelte"
+    },
+    {
+      "source": "src/routes/karte/+page.svelte",
+      "target": "src/lib/data/scenes.ts"
+    },
+    {
+      "source": "src/routes/karte/+page.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/routes/karte/+page.svelte",
+      "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/routes/karte/+page.svelte",
+      "target": "src/lib/speech.ts"
+    },
+    {
+      "source": "src/routes/labyrinth/+page.svelte",
+      "target": "src/lib/components/Maze.svelte"
+    },
+    {
+      "source": "src/routes/labyrinth/+page.svelte",
+      "target": "src/lib/components/Meta.svelte"
+    },
+    {
+      "source": "src/routes/machen/+page.svelte",
+      "target": "src/lib/components/CreaturePortrait.svelte"
+    },
+    {
+      "source": "src/routes/machen/+page.svelte",
+      "target": "src/lib/components/Meta.svelte"
+    },
+    {
+      "source": "src/routes/machen/+page.svelte",
+      "target": "src/lib/stores/mine.ts"
+    },
+    {
+      "source": "src/routes/machen/+page.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/routes/machen/+page.svelte",
+      "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/routes/machen/+page.svelte",
+      "target": "src/lib/speech.ts"
+    },
+    {
+      "source": "src/routes/machen/+page.svelte",
+      "target": "src/lib/data/i18n.ts"
+    },
+    {
+      "source": "src/routes/spiel/+page.svelte",
+      "target": "src/lib/components/CreaturePortrait.svelte"
+    },
+    {
+      "source": "src/routes/spiel/+page.svelte",
+      "target": "src/lib/data/cast.ts"
+    },
+    {
+      "source": "src/routes/spiel/+page.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/routes/spiel/+page.svelte",
+      "target": "src/lib/stores/progress.ts"
+    },
+    {
+      "source": "src/routes/spiel/+page.svelte",
+      "target": "src/lib/data/i18n.ts"
+    },
+    {
+      "source": "src/routes/spiel/+page.svelte",
+      "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/routes/spiel/+page.svelte",
+      "target": "src/lib/speech.ts"
+    },
+    {
+      "source": "src/routes/spiel/+page.svelte",
+      "target": "src/lib/sim/types.ts"
+    },
+    {
+      "source": "src/routes/spiel/+page.svelte",
+      "target": "src/lib/components/Meta.svelte"
+    },
+    {
+      "source": "src/routes/steckbriefe/+page.svelte",
+      "target": "src/lib/components/CreaturePortrait.svelte"
+    },
+    {
+      "source": "src/routes/steckbriefe/+page.svelte",
+      "target": "src/lib/data/cast.ts"
+    },
+    {
+      "source": "src/routes/steckbriefe/+page.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/routes/steckbriefe/+page.svelte",
+      "target": "src/lib/stores/progress.ts"
+    },
+    {
+      "source": "src/routes/steckbriefe/+page.svelte",
+      "target": "src/lib/data/i18n.ts"
+    },
+    {
+      "source": "src/routes/steckbriefe/+page.svelte",
+      "target": "src/lib/components/Meta.svelte"
+    },
+    {
+      "source": "src/routes/tippen/+page.svelte",
+      "target": "src/lib/components/CreaturePortrait.svelte"
+    },
+    {
+      "source": "src/routes/tippen/+page.svelte",
+      "target": "src/lib/data/cast.ts"
+    },
+    {
+      "source": "src/routes/tippen/+page.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/routes/tippen/+page.svelte",
+      "target": "src/lib/stores/progress.ts"
+    },
+    {
+      "source": "src/routes/tippen/+page.svelte",
+      "target": "src/lib/data/i18n.ts"
+    },
+    {
+      "source": "src/routes/tippen/+page.svelte",
+      "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/routes/tippen/+page.svelte",
+      "target": "src/lib/sim/types.ts"
+    },
+    {
+      "source": "src/routes/tippen/+page.svelte",
+      "target": "src/lib/components/Meta.svelte"
+    },
+    {
+      "source": "src/routes/verstecken/+page.svelte",
+      "target": "src/lib/components/Tank.svelte"
+    },
+    {
+      "source": "src/routes/verstecken/+page.svelte",
+      "target": "src/lib/components/CreaturePortrait.svelte"
+    },
+    {
+      "source": "src/routes/verstecken/+page.svelte",
+      "target": "src/lib/components/Meta.svelte"
+    },
+    {
+      "source": "src/routes/verstecken/+page.svelte",
+      "target": "src/lib/data/cast.ts"
+    },
+    {
+      "source": "src/routes/verstecken/+page.svelte",
+      "target": "src/lib/stores/settings.ts"
+    },
+    {
+      "source": "src/routes/verstecken/+page.svelte",
+      "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/routes/verstecken/+page.svelte",
+      "target": "src/lib/sim/world.ts"
+    },
+    {
+      "source": "src/routes/verstecken/+page.svelte",
+      "target": "src/lib/sim/types.ts"
+    }
+  ],
+  "builtFrom": "src"
+}

@@ -6,10 +6,11 @@
   "description": "An interactive aquarium for a five-year-old, in the world of the Seepferdchenhof books",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "node scripts/graph.mjs && vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "graph": "node scripts/graph.mjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.6",

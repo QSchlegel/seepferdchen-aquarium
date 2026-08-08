@@ -831,3 +831,37 @@ describe('the key hunt', () => {
     expect(tr.keyY).toBeGreaterThan(500 * 0.5);
   });
 });
+
+describe('nobody gets stuck in the rocks', () => {
+  it('keeps every swimmer out of the sea floor, in every place', () => {
+    for (const place of ['riff', 'tiefsee', 'vulkan', 'eismeer'] as const) {
+      setScene(place);
+      const w = new World(stubContext(), SPECS, { quality: 'low', sparkles: false });
+      w.resize(900, 700);
+      run(w, 40);
+      for (const c of w.creatures) {
+        if (c.mode === 'crawl' || c.mode === 'static') continue;
+        const floor = sandY(c.x);
+        expect(c.y, `${c.id} sank into the floor in ${place}`).toBeLessThanOrEqual(floor + 1);
+      }
+    }
+    setScene('riff');
+  });
+
+  it('does not leave a swimmer grinding against a slope', () => {
+    setScene('vulkan');   // the most broken-up terrain of the nine
+    const w = new World(stubContext(), SPECS, { quality: 'low', sparkles: false });
+    w.resize(900, 700);
+    run(w, 6);
+
+    const swimmers = w.creatures.filter((c) => c.mode === 'swim');
+    const start = swimmers.map((c) => ({ x: c.x, y: c.y }));
+    run(w, 14);
+    // over fourteen seconds a free swimmer should have gone somewhere
+    swimmers.forEach((c, i) => {
+      const moved = Math.hypot(c.x - start[i].x, c.y - start[i].y);
+      expect(moved, `${c.id} barely moved — stuck?`).toBeGreaterThan(20);
+    });
+    setScene('riff');
+  });
+});

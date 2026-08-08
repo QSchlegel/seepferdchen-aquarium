@@ -9,6 +9,24 @@
 
   let canvas: HTMLCanvasElement;
 
+  /**
+   * The fit has to follow the creature.
+   *
+   * These were computed once at mount, so a tile that changes creature — the
+   * maker's live preview does exactly that — kept drawing every later body
+   * with the *first* one's bounding box. A unicorn scaled and centred as if it
+   * were a fish is what came out as a smear.
+   */
+  const extent = $derived(extentOf(spec.kind));
+  const scale = $derived(
+    Math.min(
+      // generous margin: the stored extents are approximations, and a clipped
+      // creature looks broken in a way a slightly small one does not
+      (size * 0.78) / (spec.size * extent.halfW * 2),
+      (size * 0.78) / (spec.size * extent.halfH * 2)
+    )
+  );
+
   onMount(() => {
     const ctx = canvas.getContext('2d')!;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -16,14 +34,6 @@
     canvas.height = Math.round(size * dpr);
     let raf = 0;
     const t0 = performance.now();
-
-    // fit the creature's real bounding box into the tile with a little margin
-    const e = extentOf(spec.kind);
-    const pad = 0.88;
-    const scale = Math.min(
-      (size * pad) / (spec.size * e.halfW * 2),
-      (size * pad) / (spec.size * e.halfH * 2)
-    );
 
     const frame = (now: number) => {
       const t = ((now - t0) / 1000) * speed;
@@ -33,7 +43,7 @@
       ctx.save();
       ctx.translate(size / 2, size / 2);
       ctx.scale(scale, scale);
-      ctx.translate(-e.cx * spec.size, -e.cy * spec.size);
+      ctx.translate(-extent.cx * spec.size, -extent.cy * spec.size);
       art.drawCreature(spec.kind, { ...spec, dir: 1, phase: spec.phase ?? 0, wiggle: 0 }, t);
       ctx.restore();
       raf = requestAnimationFrame(frame);

@@ -59,6 +59,90 @@ export function removeMine(id: string) {
   mine.update((list) => list.filter((c) => c.id !== id));
 }
 
+/* Shifting a colour towards white or black, for the shades each routine wants. */
+function shift(hex: string, amount: number) {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((d) => d + d).join('') : h;
+  const n = parseInt(full, 16);
+  const ch = (sh: number) => {
+    const v = (n >> sh) & 255;
+    const out = amount > 0 ? v + (255 - v) * amount : v * (1 + amount);
+    return Math.max(0, Math.min(255, Math.round(out)));
+  };
+  return `#${[16, 8, 0].map((s) => ch(s).toString(16).padStart(2, '0')).join('')}`;
+}
+const lighter = (c: string, k = 0.35) => shift(c, k);
+const darker = (c: string, k = 0.3) => shift(c, -k);
+
+/**
+ * The full palette a drawing routine expects, built from her three colours.
+ *
+ * Each `kind` reads different fields — a seahorse wants `dark`, a sea unicorn
+ * wants `shade` and `tail` and a `mane` **array**, a merperson wants eight of
+ * them. Handing over only body/accent/fin left those routines painting with
+ * `undefined`, which is what made the unicorns and merpeople come out as
+ * smears. Anything missing here is a broken creature, so it is exhaustive.
+ */
+function paletteFor(kind: string, body: string, accent: string, fin: string) {
+  const rainbow = [accent, lighter(accent), fin, lighter(fin, 0.5), body, lighter(body)];
+
+  switch (kind) {
+    case 'seahorse':
+      return { body, accent, fin, dark: darker(body) };
+
+    case 'merperson':
+      // drawMerperson reads sixteen fields, not the handful the name suggests
+      return {
+        skin: body, skinDark: darker(body),
+        hair: accent, hairHi: lighter(accent), streak: lighter(accent, 0.6),
+        hairStyle: 'curly',
+        tail: fin, tailDark: darker(fin),
+        top: accent, topAlt: lighter(accent, 0.5),
+        tie: fin, accColor: accent, glassCol: lighter(body, 0.6),
+        pattern: 'plain',
+        dots: lighter(fin, 0.55),
+        body, accent, fin
+      };
+
+    case 'seaUnicorn':
+      return { body, shade: darker(body, 0.16), tail: fin, mane: rainbow, accent, fin };
+
+    case 'unicornLand':
+      return { body, shade: darker(body, 0.16), mane: rainbow, tail: rainbow, accent, fin };
+
+    case 'parrot':
+      return {
+        body, fin, fin2: darker(fin), beak: accent,
+        belly: lighter(body, 0.45), belly2: lighter(body, 0.7),
+        top: accent, accent
+      };
+
+    case 'unicorn':
+      return { body, accent, fin, rainbow };
+
+    case 'jelly':
+      // the jellies are drawn translucent, so their body wants an alpha
+      return { body: withAlpha(body, 0.72), fin, accent };
+
+    case 'snail':
+      return { body, foot: lighter(body, 0.5), accent, fin };
+
+    case 'eel':
+      return { body, accent: darker(accent), fin };
+
+    default:
+      // fish, octopus, star, crab, turtle, shark, parrot, minnow
+      return { body, accent, fin };
+  }
+}
+
+function withAlpha(hex: string, a: number) {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((d) => d + d).join('') : h;
+  const n = parseInt(full, 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
 /**
  * Turn a made creature into a spec the simulation understands. Home-made ones
  * are always free swimmers — the modes that need a leader or a shoal only make
@@ -73,14 +157,9 @@ export function toSpec(c: MyCreature): CreatureSpec {
     size: c.size,
     speed: 46 + (40 - c.size) * 0.6,
     tailSpeed: 7,
-    body: c.body,
-    accent: c.accent,
-    fin: c.fin,
-    mane: c.accent,
-    tail: c.fin,
-    skin: c.body,
-    hair: c.accent,
-    upright: c.kind === 'seahorse' || c.kind === 'merperson',
+    phase: 0,
+    ...paletteFor(c.kind, c.body, c.accent, c.fin),
+    upright: c.kind === 'seahorse' || c.kind === 'merperson' || c.kind === 'rider',
     sparkles: c.sparkles,
     group: 'mine',
     about: { de: 'Selbst gemacht!', en: 'Home-made!' }

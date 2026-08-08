@@ -174,8 +174,28 @@ function bounds(c: Creature, ctx: Context) {
     c.x = ctx.width - m; c.vx = -Math.abs(c.vx); c.tx = rnd(ctx.width * 0.1, ctx.width * 0.6);
   }
   if (c.y < m * 0.8) { c.y = m * 0.8; c.vy = Math.abs(c.vy); }
-  const floor = sandY(c.x) - c.size * (c.upright ? 1.0 : 0.5);
-  if (c.y > floor) { c.y = floor; c.vy = -Math.abs(c.vy); }
+
+  const clear = c.size * (c.upright ? 1.0 : 0.5);
+  const floor = sandY(c.x) - clear;
+  if (c.y > floor) {
+    c.y = floor;
+    if (c.vy > 0) c.vy = -Math.abs(c.vy) * 0.6;
+
+    // Slide along the slope as well as lifting out of it. The terrain has
+    // steep-sided outcrops now, and correcting only downwards left a swimmer
+    // pressed into the rock with its own steering driving it straight back in
+    // — which is exactly what looked like getting stuck.
+    // sandY grows downwards, so the larger side is the way out.
+    const slope = (sandY(c.x + 6) - sandY(c.x - 6)) / 12;
+    c.x = clamp(c.x + slope * 9, m, ctx.width - m);
+    c.vx += slope * 26;
+
+    // and stop it aiming at a point buried in the hill
+    if (c.ty !== null && c.tx !== null && c.ty > sandY(c.tx) - clear) {
+      c.tx = rnd(ctx.width * 0.1, ctx.width * 0.9);
+      c.ty = rnd(ctx.height * 0.12, sandY(c.tx) - clear - 40);
+    }
+  }
 }
 
 const MODES: Record<string, (c: Creature, ctx: Context) => void> = {
