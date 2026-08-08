@@ -810,7 +810,15 @@ function drawVistaShape(to: string, r: number, t: number){
   }
 }
 
-/** Blend two \'#rrggbb\' colours, k = 0 gives the first. */
+/** '#rrggbb' plus an alpha, for gradient stops. */
+function hexA(hex: string, a: number){
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const n = parseInt(full, 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+/** Blend two '#rrggbb' colours, k = 0 gives the first. */
 function mix(a: string, b: string, k: number){
   const pa = parseInt(a.replace('#', ''), 16), pb = parseInt(b.replace('#', ''), 16);
   const ch = (sh: number) =>
@@ -837,19 +845,81 @@ export function ridgeY(layer: number, x: number) {
   const u = x / Math.max(1, W);
   const seed = scene.terrain.seed + layer * 57;
   const lift = H * (0.16 - layer * 0.05);
-  let y = SAND - lift + (fbm(u * (1.7 + layer * 0.7) + seed, 3) - 0.5) * H * (0.1 + layer * 0.03);
 
-  // the land rises into a headland wherever there is somewhere to go
+  // Broad shape, then finer roughness, then the odd sharp spire. Three
+  // octaves alone gave a smooth rolling line that read as a painted backdrop;
+  // rock needs detail at more than one scale to look like rock.
+  let y = SAND - lift + (fbm(u * (1.7 + layer * 0.7) + seed, 4) - 0.5) * H * (0.1 + layer * 0.03);
+  y += (fbm(u * (9 + layer * 4) + seed * 1.7, 2) - 0.5) * H * 0.022;
+  // pinnacles, narrow and only where the noise already stands high
+  const spike = Math.pow(Math.max(0, Math.sin(u * (11 + layer * 5) + seed * 0.7)), 16);
+  y -= spike * H * 0.055 * (1 - layer * 0.2);
+
   if (layer === RIDGE_LAYERS - 1) {
     for (const h of headlands) {
       const d = (x - h.x) / (h.r * 2.1);
-      y = Math.min(y, h.y + h.r * 0.55 - Math.exp(-d * d) * h.r * 1.45);
+      // the land rises into a headland wherever there is somewhere to go,
+      // and dips either side of it so the shape funnels the eye inwards
+      const bell = Math.exp(-d * d);
+      const valley = Math.exp(-Math.pow((Math.abs(d) - 1.7) * 1.5, 2)) * h.r * 0.35;
+      y = Math.min(y, h.y + h.r * 0.55 - bell * h.r * 1.45) + valley * (1 - bell);
     }
   }
   return y;
 }
 
 export const RIDGE_LAYERS = 3;
+
+/**
+ * Wayfinding: the water above each headland takes on that place's own colour,
+ * and a current streams towards it.
+ *
+ * A five-year-old cannot read a signpost, so direction has to be carried by
+ * colour and motion. Green water means the kelp forest is that way; a dark
+ * cold wash means the deep. The streaks give the eye something to follow.
+ */
+function drawWayfinding(t: number){
+  for(const h of headlands){
+    const there = SCENES[h.to as SceneId] ?? SCENES[DEFAULT_SCENE];
+    const base = ridgeY(RIDGE_LAYERS - 1, h.x);
+    const reach = h.r * 3.4;
+
+    // the colour of that place, bleeding up into this one's water
+    ctx.save();
+    ctx.globalAlpha = 0.62 + h.glow * 0.3;
+    const halo = ctx.createRadialGradient(h.x, base, h.r * 0.15, h.x, base, reach);
+    halo.addColorStop(0, hexA(there.water[1], 0.85));
+    halo.addColorStop(0.3, hexA(there.water[2], 0.5));
+    halo.addColorStop(0.65, hexA(there.water[3], 0.2));
+    halo.addColorStop(1, hexA(there.water[3], 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.ellipse(h.x, base, reach, reach * 0.85, 0, 0, 7);
+    ctx.fill();
+    ctx.restore();
+
+    // a current running towards it, so the eye is led rather than told
+    ctx.save();
+    ctx.globalAlpha = 0.3 + h.glow * 0.45;
+    ctx.strokeStyle = hexA(there.water[0], 0.95);
+    ctx.lineCap = 'round';
+    for(let i = 0; i < 5; i++){
+      const side = i % 2 ? 1 : -1;
+      const lane = h.r * (1.5 + (i % 3) * 0.55);
+      const flow = ((t * 0.28 + i * 0.2) % 1);
+      const sx = h.x + side * lane * (1 - flow * 0.72);
+      const sy = base - h.r * (0.7 + (i % 3) * 0.42) - Math.sin(flow * 3) * 6;
+      const len = h.r * 0.42 * (1 - Math.abs(flow - 0.5) * 1.1);
+      if(len <= 0) continue;
+      ctx.lineWidth = 2 + (i % 2);
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.quadraticCurveTo(sx - side * len * 0.5, sy + 3, sx - side * len, sy + 5);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
 
 function drawRidgeLayer(layer: number, t: number){
   // In the deep the water is nearly black, so a silhouette painted in a darker
@@ -868,6 +938,23 @@ function drawRidgeLayer(layer: number, t: number){
   ctx.lineTo(W + 40, H);
   ctx.closePath();
   ctx.fill();
+
+  // growth along the skyline, so the crest is not a bare drawn line
+  const step = 26 + layer * 10;
+  for(let x = 0; x <= W; x += step){
+    const j = hash1(x * 0.37 + layer * 13 + scene.terrain.seed);
+    if(j < 0.45) continue;
+    const gy = ridgeY(layer, x);
+    const h2 = (6 + j * 22) * (1 - layer * 0.22);
+    ctx.beginPath();
+    ctx.moveTo(x - h2 * 0.3, gy + 2);
+    ctx.quadraticCurveTo(
+      x + Math.sin(t * 0.5 + x) * h2 * 0.18, gy - h2,
+      x + h2 * 0.3, gy + 2
+    );
+    ctx.closePath();
+    ctx.fill();
+  }
 
   // the landmarks stand on the nearest ridge, in that ridge's own colour, so
   // they are part of the silhouette rather than pasted over it
@@ -3135,6 +3222,7 @@ export const reef = {
   seaweed: drawSeaweed,
   coral: drawCoral,
   ridge: drawRidgeLayer,
+  wayfinding: drawWayfinding,
   vista: drawVista,
   caustics: drawCaustics,
   motes: drawMotes,

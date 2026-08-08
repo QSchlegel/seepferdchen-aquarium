@@ -1086,6 +1086,8 @@ export class World {
     for (let i = 0; i < art.RIDGE_LAYERS; i++) {
       layer(0.05 + i * 0.05, () => art.reef.ridge(i, t));
     }
+    // colour and current pointing the way, over the terrain but behind the reef
+    layer(0.2, () => art.reef.wayfinding(t));
     // deep water first: silhouettes, then the light net over everything
     layer(0.12, () => art.reef.farFish(t));
     layer(0.18, () => art.reef.caustics(t));
