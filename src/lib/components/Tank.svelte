@@ -18,16 +18,21 @@
     world = $bindable<World | null>(null),
     onmeet = (c: Creature) => {},
     onhunt = (stage: HuntStage) => {},
+    span = undefined as number | undefined,
     onkey = (effect: KeyEffect) => {},
     onpearl = (home: number, wanted: number) => {},
-    ontravel = (to: string) => {}
+    ontravel = (to: string) => {},
+    ondrive = (riding: boolean) => {}
   }: {
     world?: World | null;
     onmeet?: (c: Creature) => void;
     onhunt?: (stage: HuntStage) => void;
+    /** Force a one-screen sea. Hide and seek does; the tank does not. */
+    span?: number;
     onkey?: (effect: KeyEffect) => void;
     onpearl?: (home: number, wanted: number) => void;
     ontravel?: (to: string) => void;
+    ondrive?: (riding: boolean) => void;
   } = $props();
 
   let canvas: HTMLCanvasElement;
@@ -40,7 +45,7 @@
     setScene($settings.scene);   // before the world sizes, so scenery grows to match
     // her own creatures swim with the rest
     const cast = [...CAST, ...$mine.map(toSpec)];
-    const w = new World(ctx, cast, { quality: $settings.quality, sparkles: $settings.sparkles }, {
+    const w = new World(ctx, cast, { quality: $settings.quality, sparkles: $settings.sparkles, span }, {
       onFeed: (total) => recordFeed(total),
       onTap: (c) => {
         recordMeeting(c.id);
@@ -70,7 +75,9 @@
       onTravel: (to) => {
         ontravel(to);
         if ($settings.sound) sfx.sing();
-      }
+      },
+      onTamed: () => { if ($settings.sound) { sfx.sing(); setTimeout(sfx.chime, 220); } },
+      onDrive: (c) => ondrive(!!c)
     });
     world = w;
 
@@ -198,6 +205,11 @@
     }
 
     const hit = world?.tap(x, y);
+    // a tame creature offers its back: tap to ride, tap again to let go
+    if (hit?.tame && world) {
+      world.drive(world.driving === hit ? null : hit);
+      if ($settings.sound) sfx.chime();
+    }
     if (!hit && $settings.sound) sfx.plop();
     // holding still on one spot turns her finger into a bubbler
     setTimeout(() => { if (drag && drag.moved < 10) startStream(drag.x, drag.y); }, HOLD_MS);

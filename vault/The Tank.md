@@ -52,6 +52,28 @@ tap the chest: the lid springs open, coins fountain out, and one of six
 treasures rises in a shaft of light. After a while the chest locks itself and
 the key hides somewhere new. The longer she hunts, the more often it winks.
 
+## The sea is wider than the window
+
+Each place is several screens long (`span` in `scenes.ts`, 3–5) and **loops**:
+swim off one end and you come back on the other. Everything with a position
+stores *world* coordinates; `art.sx()` turns those into screen coordinates and
+`wrapDelta()` measures the short way round, so a fish near the seam still
+chases food just across it rather than swimming the long way.
+
+The terrain noise is periodic over one loop — `loopFbm()` blends the value at u
+with the value at u−1 so f(0) === f(1). Tests assert the floor and all three
+ridge layers join with no step, in all nine places.
+
+Hide and seek forces `span: 1`. A target she would have to swim off-window to
+find is not a target a four-year-old can find.
+
+## Taming and riding
+
+Feed a creature its favourite and its trust grows — a ring fills over its head.
+At full trust it is tame and wears a heart. Tap a tame creature to take the
+reins; a thumb stick appears (WASD and arrows also work) and the camera follows
+it through the sea, round the loop and back.
+
 ## Terrain
 
 Layered value noise, seeded per place — see [[The Nine Places]]. `sandY(x)` is

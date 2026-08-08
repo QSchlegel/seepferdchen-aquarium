@@ -79,7 +79,8 @@
 
 <Meta path="/verstecken" />
 
-<Tank bind:world {onmeet} />
+<!-- one screen: a target she must swim off-window to find is not findable -->
+<Tank bind:world {onmeet} span={1} />
 
 <div class="hud">
   {#if target}

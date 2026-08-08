@@ -11,7 +11,7 @@
       "id": "src/lib/art/index.ts",
       "label": "index",
       "layer": "art",
-      "loc": 3241,
+      "loc": 3327,
       "fanIn": 5
     },
     {
@@ -27,6 +27,13 @@
       "layer": "component",
       "loc": 61,
       "fanIn": 6
+    },
+    {
+      "id": "src/lib/components/Joystick.svelte",
+      "label": "Joystick",
+      "layer": "component",
+      "loc": 186,
+      "fanIn": 1
     },
     {
       "id": "src/lib/components/Maze.svelte",
@@ -60,7 +67,7 @@
       "id": "src/lib/components/Tank.svelte",
       "label": "Tank",
       "layer": "component",
-      "loc": 266,
+      "loc": 278,
       "fanIn": 2
     },
     {
@@ -81,7 +88,7 @@
       "id": "src/lib/data/scenes.ts",
       "label": "scenes",
       "layer": "data",
-      "loc": 214,
+      "loc": 229,
       "fanIn": 4
     },
     {
@@ -102,7 +109,7 @@
       "id": "src/lib/sim/behaviour.ts",
       "label": "behaviour",
       "layer": "sim",
-      "loc": 357,
+      "loc": 355,
       "fanIn": 1
     },
     {
@@ -116,14 +123,14 @@
       "id": "src/lib/sim/types.ts",
       "label": "types",
       "layer": "sim",
-      "loc": 153,
+      "loc": 162,
       "fanIn": 11
     },
     {
       "id": "src/lib/sim/world.ts",
       "label": "world",
       "layer": "sim",
-      "loc": 1347,
+      "loc": 1504,
       "fanIn": 3
     },
     {
@@ -179,7 +186,7 @@
       "id": "src/routes/+page.svelte",
       "label": "/",
       "layer": "route",
-      "loc": 347,
+      "loc": 358,
       "fanIn": 0
     },
     {
@@ -242,7 +249,7 @@
       "id": "src/routes/verstecken/+page.svelte",
       "label": "/verstecken",
       "layer": "route",
-      "loc": 151,
+      "loc": 152,
       "fanIn": 0
     },
     {
@@ -475,6 +482,10 @@
     {
       "source": "src/routes/+page.svelte",
       "target": "src/lib/components/Meta.svelte"
+    },
+    {
+      "source": "src/routes/+page.svelte",
+      "target": "src/lib/components/Joystick.svelte"
     },
     {
       "source": "src/routes/geschichte/+page.svelte",

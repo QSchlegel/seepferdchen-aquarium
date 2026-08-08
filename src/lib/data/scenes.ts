@@ -58,6 +58,12 @@ export interface Scene {
   links: SceneId[];
   /** Where this place sits on the map, as a 3x3 grid cell. */
   cell: [number, number];
+  /**
+   * How many screens wide this place is before it loops back on itself. The
+   * tank is a window onto a stretch of sea, not the whole of it — swim far
+   * enough left or right and you come round again.
+   */
+  span: number;
 }
 
 export const SCENES: Record<SceneId, Scene> = {
@@ -72,6 +78,7 @@ export const SCENES: Record<SceneId, Scene> = {
     growth: { seaweed: 1, kelp: 1, fans: 1, sponges: 1, anemones: 1, coral: 1 },
     links: ['kelpwald', 'lagune', 'tiefsee'],
     cell: [1, 1],
+    span: 3,
     residents: ['rangers', 'seahorses', 'fish', 'shoals', 'friends', 'unicorns'],
     terrain: { seed: 0,   roll: 0.10, ridge: 0.05, ridgeFreq: 7.3,  lift: 0 },
   },
@@ -86,6 +93,7 @@ export const SCENES: Record<SceneId, Scene> = {
     growth: { seaweed: 2.4, kelp: 3.2, fans: 0.3, sponges: 0.4, anemones: 0.5, coral: 0.4 },
     links: ['riff', 'eismeer', 'hoehle'],
     cell: [0, 1],
+    span: 4,
     residents: ['rangers', 'seahorses', 'fish', 'shoals'],
     terrain: { seed: 31,  roll: 0.07, ridge: 0.02, ridgeFreq: 4.1,  lift: 0.02 },
   },
@@ -102,6 +110,7 @@ export const SCENES: Record<SceneId, Scene> = {
     glow: true,
     links: ['riff', 'hoehle', 'vulkan'],
     cell: [1, 2],
+    span: 5,
     residents: ['rangers', 'friends', 'shoals'],
     terrain: { seed: 77,  roll: 0.17, ridge: 0.13, ridgeFreq: 3.2,  lift: -0.06 },
   },
@@ -118,6 +127,7 @@ export const SCENES: Record<SceneId, Scene> = {
     wreck: true,
     links: ['vulkan', 'perlbank'],
     cell: [2, 1],
+    span: 3,
     residents: ['rangers', 'friends', 'fish', 'seahorses'],
     terrain: { seed: 128, roll: 0.05, ridge: 0.02, ridgeFreq: 9.0,  lift: 0.03 },
   },
@@ -133,6 +143,7 @@ export const SCENES: Record<SceneId, Scene> = {
     tint: { color: '#fff3c9', alpha: 0.08 },
     links: ['riff', 'perlbank', 'eismeer'],
     cell: [1, 0],
+    span: 3,
     residents: ['rangers', 'unicorns', 'seahorses', 'shoals'],
     terrain: { seed: 205, roll: 0.05, ridge: 0.01, ridgeFreq: 5.5, lift: 0.08 }
   },
@@ -149,6 +160,7 @@ export const SCENES: Record<SceneId, Scene> = {
     glow: true,
     links: ['kelpwald', 'tiefsee', 'vulkan'],
     cell: [0, 2],
+    span: 4,
     residents: ['rangers', 'friends', 'shoals'],
     terrain: { seed: 311, roll: 0.14, ridge: 0.16, ridgeFreq: 5.7, lift: 0.04 }
   },
@@ -165,6 +177,7 @@ export const SCENES: Record<SceneId, Scene> = {
     glow: true,
     links: ['tiefsee', 'hoehle', 'wrack'],
     cell: [2, 2],
+    span: 4,
     residents: ['rangers', 'friends', 'fish'],
     terrain: { seed: 404, roll: 0.2, ridge: 0.22, ridgeFreq: 2.6, lift: -0.02 }
   },
@@ -180,6 +193,7 @@ export const SCENES: Record<SceneId, Scene> = {
     tint: { color: '#dff2ff', alpha: 0.12 },
     links: ['kelpwald', 'lagune', 'perlbank'],
     cell: [0, 0],
+    span: 5,
     residents: ['rangers', 'seahorses', 'shoals', 'friends'],
     terrain: { seed: 512, roll: 0.13, ridge: 0.18, ridgeFreq: 3.8, lift: 0.05 }
   },
@@ -195,6 +209,7 @@ export const SCENES: Record<SceneId, Scene> = {
     tint: { color: '#ffe6f4', alpha: 0.1 },
     links: ['lagune', 'wrack', 'eismeer'],
     cell: [2, 0],
+    span: 3,
     residents: ['rangers', 'seahorses', 'unicorns', 'shoals'],
     terrain: { seed: 620, roll: 0.06, ridge: 0.03, ridgeFreq: 6.4, lift: 0.06 }
   }

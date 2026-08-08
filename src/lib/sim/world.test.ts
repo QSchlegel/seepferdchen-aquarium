@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { LOOT, World } from './world';
-import { chestPos, sandY, setScene, setTank } from '$lib/art';
+import { chestPos, sandY, setScene, setTank, wrapDelta } from '$lib/art';
 import { stubContext } from '../../test/stub-canvas';
-import type { CreatureSpec } from './types';
+import type { Creature, CreatureSpec } from './types';
 
 const SPECS: CreatureSpec[] = [
   { id: 'a', name: 'A', kind: 'fish', size: 24, speed: 60 },
@@ -37,12 +37,15 @@ describe('World', () => {
     expect(foal.leaderRef?.id).toBe('leader');
   });
 
-  it('keeps every creature inside the glass', () => {
+  it('keeps every creature in the sea', () => {
     const w = makeWorld();
     run(w, 30);
     for (const c of w.creatures) {
-      expect(c.x).toBeGreaterThan(-c.size);
-      expect(c.x).toBeLessThan(800 + c.size);
+      // the sea loops, so x is anywhere in world space — but always wrapped,
+      // never drifting off to infinity
+      expect(c.x).toBeGreaterThanOrEqual(0);
+      expect(c.x).toBeLessThanOrEqual(w.worldWidth);
+      // vertically it is still a tank, with a surface and a floor
       expect(c.y).toBeGreaterThan(-c.size);
       expect(c.y).toBeLessThan(600 + c.size * 2);
       expect(Number.isFinite(c.x)).toBe(true);
@@ -355,7 +358,9 @@ describe('nothing stands still', () => {
     const star = w.creatures.find((c) => c.id === 'star')!;
     const home = star.x;
     run(w, 30);
-    expect(Math.abs(star.x - home)).toBeLessThan(20);   // it rocks, it does not wander off
+    // distance round the loop: the sea has no ends, so a patch near zero is
+    // not a whole world away from a position just before the seam
+    expect(Math.abs(wrapDelta(home, star.x))).toBeLessThan(20);
   });
 });
 
@@ -863,5 +868,96 @@ describe('nobody gets stuck in the rocks', () => {
       expect(moved, `${c.id} barely moved — stuck?`).toBeGreaterThan(20);
     });
     setScene('riff');
+  });
+});
+
+describe('taming and riding', () => {
+  const RIDE: CreatureSpec[] = [
+    { id: 'nemo', name: 'N', kind: 'fish', size: 26, speed: 60, likes: 'pellet' }
+  ];
+  const build = () => {
+    setScene('riff');
+    const w = new World(stubContext(), RIDE, { quality: 'low', sparkles: false });
+    w.resize(800, 600);
+    return w;
+  };
+
+  it('makes the sea several screens wide and loops it', () => {
+    const w = build();
+    expect(w.worldWidth).toBe(800 * 3);
+  });
+
+  it('wins a creature round by feeding it its favourite', () => {
+    const w = build();
+    const c = w.creatures[0];
+    expect(c.tame).toBeFalsy();
+
+    let tamed: string | null = null;
+    (w as unknown as { events: { onTamed?: (c: Creature) => void } }).events.onTamed =
+      (x) => (tamed = x.id);
+
+    // keep offering it what it likes, right where it is
+    for (let i = 0; i < 40 && !c.tame; i++) {
+      w.dropFood(c.x + 20, c.y, 1, 'pellet');
+      run(w, 3);
+    }
+    expect(c.trust).toBe(1);
+    expect(c.tame).toBe(true);
+    expect(tamed).toBe('nemo');
+  });
+
+  it('will not hand the reins to something untamed', () => {
+    const w = build();
+    expect(w.drive(w.creatures[0])).toBeNull();
+    expect(w.driving).toBeNull();
+  });
+
+  it('drives a tamed creature and carries the camera with it', () => {
+    const w = build();
+    const c = w.creatures[0];
+    c.tame = true;
+    c.trust = 1;
+
+    expect(w.drive(c)).toBe(c);
+    expect(c.driven).toBe(true);
+
+    const startX = c.x;
+    w.setSteer(1, 0);                 // ask it to swim right
+    run(w, 2.5);
+    expect(wrapDelta(startX, c.x)).toBeGreaterThan(60);
+
+    // the window followed it, keeping it roughly in the middle
+    expect(Math.abs(wrapDelta(w.camera + 400, c.x))).toBeLessThan(160);
+  });
+
+  it('lets go cleanly', () => {
+    const w = build();
+    const c = w.creatures[0];
+    c.tame = true;
+    w.drive(c);
+    w.drive(null);
+    expect(w.driving).toBeNull();
+    expect(c.driven).toBe(false);
+  });
+
+  it('carries on round the loop instead of hitting a wall', () => {
+    const w = build();
+    const c = w.creatures[0];
+    c.tame = true;
+    c.x = w.worldWidth - 40;
+    w.drive(c);
+    w.setSteer(1, 0);
+    run(w, 6);
+    // it went past the end and came back round, rather than stopping
+    expect(c.x).toBeGreaterThanOrEqual(0);
+    expect(c.x).toBeLessThanOrEqual(w.worldWidth);
+    expect(Number.isFinite(w.camera)).toBe(true);
+  });
+
+  it('lets hide and seek force a single-screen sea', () => {
+    setScene('riff');
+    const w = new World(stubContext(), RIDE, { quality: 'low', sparkles: false, span: 1 });
+    w.resize(800, 600);
+    expect(w.worldWidth).toBe(800);
   });
 });

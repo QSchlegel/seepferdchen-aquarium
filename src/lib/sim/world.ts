@@ -5,7 +5,7 @@
  */
 
 import * as art from '$lib/art';
-import { update, type Context } from './behaviour';
+import { update, favourite, type Context } from './behaviour';
 import { FOOD } from './types';
 import { SCENES, portalsOf, type SceneId } from '$lib/data/scenes';
 import type {
@@ -18,6 +18,12 @@ export interface WorldOptions {
   /** Fewer particles on slower devices. */
   quality: 'low' | 'medium' | 'high';
   sparkles: boolean;
+  /**
+   * How many screens wide the sea is. Defaults to the scene's own length;
+   * hide and seek forces 1, because a target you must swim to find is not a
+   * game a four-year-old can win.
+   */
+  span?: number;
 }
 
 export interface WorldEvents {
@@ -28,6 +34,8 @@ export interface WorldEvents {
   onCheer?: (c: Creature) => void;
   onPearl?: (home: number, wanted: number) => void;
   onTravel?: (to: SceneId) => void;
+  onTamed?: (c: Creature) => void;
+  onDrive?: (c: Creature | null) => void;
 }
 
 /** How far along the key hunt she is. */
@@ -152,6 +160,19 @@ export class World {
   /** How brightly the wreck's hold is lit — it warms when someone is inside. */
   wreckLit = 0;
 
+  /** How wide the sea is before it loops. Several screens. */
+  worldWidth = 0;
+
+  /** Where the window sits along the sea. Follows whatever she is riding. */
+  camera = 0;
+
+  /**
+   * The creature she is currently driving, and the direction she is asking for.
+   * Null when nobody is tamed and driven — then the camera drifts on its own.
+   */
+  driving: Creature | null = null;
+  steer = { x: 0, y: 0 };
+
   /** Where she is leaning, -1 to 1. Slides the reef layers for parallax. */
   look = { x: 0, y: 0 };
 
@@ -196,15 +217,16 @@ export class World {
     this.width = width;
     this.height = height;
     art.setTank(width, height);
+    this.worldWidth = width * (this.options.span ?? art.currentScene().span ?? 1);
+    art.setWorld(this.worldWidth);
     if (!this.creatures.length) this.stock();
     const k = this.sizeScale();
     for (const c of this.creatures) c.size = (c.baseSize ?? c.size) * k;
     for (const c of this.creatures) {
+      c.x = art.wrapWorld(c.x);
       if (c.mode === 'crawl' || c.mode === 'static') {
-        c.x = art.clamp(c.x, 40, width - 40);
         c.y = art.sandY(c.x) + (c.mode === 'static' ? 22 : 6);
       }
-      c.x = art.clamp(c.x, 20, width - 20);
       c.y = art.clamp(c.y, 20, height - 20);
     }
     // keep the key lying on the sand when the tank changes shape, rather than
@@ -246,13 +268,14 @@ export class World {
   /** Is this point on the hidden key? Generous, for small fingers. */
   private onKey(x: number, y: number) {
     const tr = this.treasure;
-    return tr.stage === 'hidden' && Math.hypot(tr.keyX - x, tr.keyY - y) < 42;
+    return tr.stage === 'hidden'
+      && Math.hypot(art.wrapDelta(this.wx(x), tr.keyX), tr.keyY - y) < 42;
   }
 
   /** Is this point on the chest? A box, because the chest is a wide, low thing. */
   private onChest(x: number, y: number) {
     const p = art.chestPos();
-    return Math.abs(x - p.x) < 50 && y > p.y - 60 && y < p.y + 20;
+    return Math.abs(art.wrapDelta(this.wx(x), p.x)) < 50 && y > p.y - 60 && y < p.y + 20;
   }
 
   private takeKey() {
@@ -381,7 +404,7 @@ export class World {
       baseSize: spec.size,
       size: spec.size * scale,
       mode,
-      x: this.width * (0.06 + fx * 0.88),
+      x: (this.worldWidth || this.width) * fx,
       y: this.height * (0.1 + fy * 0.68),
       // spread the cast through the depth of the tank, not onto one pane
       z: art.rnd(-0.85, 0.85),
@@ -445,6 +468,11 @@ export class World {
   /* -------------------------------------------------------------- input */
 
   /** What is under this point, if anything. Drives the hover cursor. */
+  /** Screen x to world x — every tap has to cross this bridge now. */
+  private wx(screenX: number) {
+    return art.wrapWorld(this.camera + screenX);
+  }
+
   hitTest(x: number, y: number): HitKind {
     if (this.onKey(x, y)) return 'key';
     if (this.treasure.stage === 'carried' && this.onChest(x, y)) return 'chest';
@@ -454,8 +482,9 @@ export class World {
   private creatureAt(x: number, y: number): Creature | null {
     let hit: Creature | null = null;
     let bestD = Infinity;
+    const wx = this.wx(x);
     for (const c of this.creatures) {
-      const d = Math.hypot(c.x - x, c.y - y);
+      const d = Math.hypot(art.wrapDelta(wx, c.x), c.y - y);
       // small creatures get a generous radius so small fingers can reach them
       const r = Math.max(c.size * 1.25, 34) + 8;
       if (d < r && d < bestD) { bestD = d; hit = c; }
@@ -473,6 +502,7 @@ export class World {
 
     // the hunt gets first refusal: both targets are small and deliberate
     if (this.onKey(x, y)) { this.takeKey(); return null; }
+    const worldX = this.wx(x);
     if (this.treasure.stage === 'carried' && this.onChest(x, y)) { this.openChest(); return null; }
 
     const hit = this.creatureAt(x, y);
@@ -484,7 +514,7 @@ export class World {
       this.events.onTap?.(hit);
       return hit;
     }
-    this.dropFood(x, y);
+    this.dropFood(worldX, y);
     return null;
   }
 
@@ -634,6 +664,61 @@ export class World {
     this.pearlRespawn = this.pearlsHome < this.pearlsWanted ? 0.7 : 0;
   }
 
+  /* ------------------------------------------------------------- driving */
+
+  /** Every creature she has tamed and could take the reins of. */
+  tamed() {
+    return this.creatures.filter((c) => c.tame);
+  }
+
+  /** Take the reins of a tamed creature, or let go with null. */
+  drive(c: Creature | null) {
+    if (this.driving) this.driving.driven = false;
+    this.driving = c && c.tame ? c : null;
+    if (this.driving) {
+      this.driving.driven = true;
+      this.camera = art.wrapWorld(this.driving.x - this.width / 2);
+    }
+    this.steer = { x: 0, y: 0 };
+    this.events.onDrive?.(this.driving);
+    return this.driving;
+  }
+
+  /** Which way she is asking it to go, each component -1 to 1. */
+  setSteer(x: number, y: number) {
+    this.steer.x = art.clamp(x, -1, 1);
+    this.steer.y = art.clamp(y, -1, 1);
+  }
+
+  /**
+   * Drive the ridden creature and carry the camera with it. The camera eases
+   * rather than snapping, so the sea slides past instead of jerking.
+   */
+  private stepDriving(dt: number) {
+    const c = this.driving;
+    if (!c) {
+      // nobody at the reins: drift gently back to the start of the sea
+      const home = art.wrapDelta(this.camera, 0);
+      this.camera = art.wrapWorld(this.camera + home * Math.min(1, dt * 0.6));
+      art.setCamera(this.camera);
+      return;
+    }
+
+    const push = c.speed * 2.6;
+    c.vx += (this.steer.x * push - c.vx) * Math.min(1, dt * 4);
+    c.vy += (this.steer.y * push * 0.75 - c.vy) * Math.min(1, dt * 4);
+    if (Math.abs(c.vx) > 4) c.dir = c.vx > 0 ? 1 : -1;
+
+    // she is in charge, so it should not also be wandering off on its own
+    c.tx = null;
+    c.retarget = 0.4;
+
+    const want = art.wrapWorld(c.x - this.width / 2);
+    const d = art.wrapDelta(this.camera, want);
+    this.camera = art.wrapWorld(this.camera + d * Math.min(1, dt * 3.5));
+    art.setCamera(this.camera);
+  }
+
   /* --------------------------------------------------------- the doorways */
 
   /** Where the ways out of this scene are, in tank pixels. */
@@ -649,6 +734,9 @@ export class World {
 
     return here.map((p) => ({
       to: p.to,
+      // Deliberately within the first screen, where the camera rests. Spread
+      // across the whole loop they would only be reachable once she had tamed
+      // something to ride, and travelling must not depend on that.
       x: art.clamp(p.at[0] * this.width, r + 8, this.width - r - 8),
       y: bottom > top
         ? art.clamp(p.at[1] * this.height, top, bottom)
@@ -660,7 +748,7 @@ export class World {
   /** The doorway under a point, if any. Generous, like everything else here. */
   portalAt(x: number, y: number) {
     for (const p of this.portals()) {
-      if (Math.hypot(p.x - x, p.y - y) < p.r * 1.25) return p;
+      if (Math.hypot(art.wrapDelta(this.wx(x), p.x), p.y - y) < p.r * 1.25) return p;
     }
     return null;
   }
@@ -829,6 +917,7 @@ export class World {
   }
 
   dropFood(x: number, y: number, n = 3, kind: FoodKind = this.food) {
+    x = art.wrapWorld(x);
     this.poke = { x, y, age: 0 };
     const p = FOOD[kind];
     for (let i = 0; i < n; i++) {
@@ -845,8 +934,12 @@ export class World {
 
   /** Scatter food across the whole tank — the feed button. */
   feedEveryone(kind: FoodKind = this.food) {
+    // scatter across the window she can actually see, not the whole sea
     for (let i = 0; i < 14; i++) {
-      this.dropFood(art.rnd(this.width * 0.08, this.width * 0.92), art.rnd(20, this.height * 0.35), 1, kind);
+      this.dropFood(
+        this.wx(art.rnd(this.width * 0.08, this.width * 0.92)),
+        art.rnd(20, this.height * 0.35), 1, kind
+      );
     }
   }
 
@@ -910,6 +1003,16 @@ export class World {
         const i = this.foods.indexOf(f);
         if (i < 0) return;
         this.foods.splice(i, 1);
+        // its favourite builds trust fastest; anything else it merely tolerates
+        if (!c.tame) {
+          const gain = f.kind === favourite(c) ? 0.2 : 0.06;
+          c.trust = Math.min(1, (c.trust ?? 0) + gain);
+          if (c.trust >= 1) {
+            c.tame = true;
+            this.burst(c.x, c.y - c.size * 0.5);
+            this.events.onTamed?.(c);
+          }
+        }
         c.wiggle = 0.8;
         c.fed++;
         this.fedTotal++;
@@ -982,6 +1085,7 @@ export class World {
     this.stepPearl(dt);
     this.stepHold(dt);
     this.stepTravel(dt);
+    this.stepDriving(dt);
 
     // the wreck's hold glows while anyone is sheltering in it
     if (art.currentScene().wreck) {
@@ -1102,7 +1206,7 @@ export class World {
     // weed grow over it. Its glint is what gives it away, not its outline.
     if (this.treasure.stage === 'hidden') {
       g.save();
-      g.translate(this.treasure.keyX, this.treasure.keyY);
+      g.translate(this.sx(this.treasure.keyX), this.treasure.keyY);
       g.rotate(this.treasure.keyRot);
       g.scale(this.keyScale(), this.keyScale());
       art.reef.key(t, this.treasure.keyPhase, this.treasure.glintNow);
@@ -1116,7 +1220,7 @@ export class World {
     art.reef.seeps(t);
     art.reef.motes(t);
 
-    for (const f of this.foods) art.reef.food(f, t);
+    for (const f of this.foods) art.reef.food({ ...f, x: this.sx(f.x) }, t);
 
     // creatures, furthest away first, so near ones genuinely occlude far ones
     const order = [...this.creatures].sort((a, b) => (a.z - b.z) || (a.size - b.size));
@@ -1127,7 +1231,7 @@ export class World {
       const p = art.chestPos();
       art.reef.chestBeacon(t);
       g.save();
-      g.translate(p.x, p.y - 64 + Math.sin(t * 2.6) * 5);
+      g.translate(this.sx(p.x), p.y - 64 + Math.sin(t * 2.6) * 5);
       g.rotate(Math.sin(t * 1.4) * 0.14);
       const k = this.keyScale() * 1.15;
       g.scale(k, k);
@@ -1138,16 +1242,17 @@ export class World {
     // bubbles
     for (const b of this.bubbles) {
       g.strokeStyle = 'rgba(255,255,255,.65)'; g.lineWidth = 1.6;
-      g.beginPath(); g.arc(b.x, b.y, b.r, 0, 7); g.stroke();
+      const bx = this.sx(b.x);
+      g.beginPath(); g.arc(bx, b.y, b.r, 0, 7); g.stroke();
       g.fillStyle = 'rgba(255,255,255,.16)'; g.fill();
       g.fillStyle = 'rgba(255,255,255,.8)';
-      g.beginPath(); g.arc(b.x - b.r * 0.32, b.y - b.r * 0.34, Math.max(0.9, b.r * 0.2), 0, 7); g.fill();
+      g.beginPath(); g.arc(bx - b.r * 0.32, b.y - b.r * 0.34, Math.max(0.9, b.r * 0.2), 0, 7); g.fill();
     }
 
     // sparkles
     for (const s of this.sparkles) {
       const a = art.clamp(s.life / s.maxLife, 0, 1);
-      g.save(); g.globalAlpha = a; g.translate(s.x, s.y); g.rotate(s.rot + (1 - a) * 2);
+      g.save(); g.globalAlpha = a; g.translate(this.sx(s.x), s.y); g.rotate(s.rot + (1 - a) * 2);
       g.fillStyle = s.color;
       const r = s.r * (0.6 + 0.7 * a), q = r * 0.26;
       g.beginPath();
@@ -1160,7 +1265,7 @@ export class World {
     // hearts
     for (const h of this.hearts) {
       const a = art.clamp(h.life / h.maxLife, 0, 1);
-      g.save(); g.globalAlpha = a; g.translate(h.x, h.y); g.scale(h.scale, h.scale);
+      g.save(); g.globalAlpha = a; g.translate(this.sx(h.x), h.y); g.scale(h.scale, h.scale);
       g.fillStyle = h.color;
       g.beginPath();
       g.moveTo(0, 4);
@@ -1180,19 +1285,20 @@ export class World {
 
       g.save();
       g.globalAlpha = fade * 0.3;
-      const ray = g.createLinearGradient(p.x, p.y - 200, p.x, p.y);
+      const px = this.sx(p.x);
+      const ray = g.createLinearGradient(px, p.y - 200, px, p.y);
       ray.addColorStop(0, 'rgba(255,230,128,0)');
       ray.addColorStop(1, 'rgba(255,230,128,.9)');
       g.fillStyle = ray;
       g.beginPath();
-      g.moveTo(p.x - 20, p.y - 20); g.lineTo(p.x - 74, p.y - 210);
-      g.lineTo(p.x + 74, p.y - 210); g.lineTo(p.x + 20, p.y - 20);
+      g.moveTo(px - 20, p.y - 20); g.lineTo(px - 74, p.y - 210);
+      g.lineTo(px + 74, p.y - 210); g.lineTo(px + 20, p.y - 20);
       g.closePath(); g.fill();
       g.restore();
 
       g.save();
       g.globalAlpha = fade;
-      g.translate(p.x, y);
+      g.translate(this.sx(p.x), y);
       const s = art.clamp(ease * 1.6, 0.2, 1.25) * fade;
       g.scale(s, s);
       g.rotate(Math.sin(t * 1.5) * 0.12);
@@ -1261,7 +1367,7 @@ export class World {
     const g = this.ctx;
     const r = art.clamp(Math.min(this.width, this.height) * 0.075, 30, 58);
     g.save();
-    g.translate(h.x, h.y);
+    g.translate(this.sx(h.x), h.y);
     g.strokeStyle = 'rgba(255,255,255,.5)';
     g.lineWidth = 6;
     g.beginPath(); g.arc(0, 0, r + 10, 0, 7); g.stroke();
@@ -1271,6 +1377,11 @@ export class World {
     g.arc(0, 0, r + 10, -Math.PI / 2, -Math.PI / 2 + h.progress * Math.PI * 2);
     g.stroke();
     g.restore();
+  }
+
+  /** World x to screen x. Everything the world paints goes through this. */
+  private sx(worldX: number) {
+    return art.sx(worldX);
   }
 
   private drawCreature(c: Creature, t: number) {
@@ -1284,16 +1395,20 @@ export class World {
     // canvas `filter` is applied in device space, ignoring the transform, so a
     // blurred creature lands at the canvas origin instead of where it swims.
     g.globalAlpha = 0.34 + near * 0.66;
+    const screenX = this.sx(c.x);
+    // off the window entirely: the sea is wider than the glass now
+    if (screenX < -c.size * 3 || screenX > this.width + c.size * 3) { g.restore(); return; }
+
     if (push > 0) {
       // thrown outwards from the middle of the screen, and bigger as it passes
-      const dx = c.x - this.width / 2, dy = c.y - this.height / 2;
+      const dx = screenX - this.width / 2, dy = c.y - this.height / 2;
       const d = Math.hypot(dx, dy) || 1;
       const reach = push * Math.min(this.width, this.height) * 0.85;
-      g.translate(c.x + (dx / d) * reach, c.y + (dy / d) * reach);
+      g.translate(screenX + (dx / d) * reach, c.y + (dy / d) * reach);
       g.scale(1 + push * 0.8, 1 + push * 0.8);
       g.globalAlpha *= 1 - push * 0.7;
     } else {
-      g.translate(c.x, c.y);
+      g.translate(screenX, c.y);
     }
     g.scale(DEPTH_MIN + near * DEPTH_SPAN, DEPTH_MIN + near * DEPTH_SPAN);
 
@@ -1311,10 +1426,52 @@ export class World {
     art.drawCreature(c.kind, c, t);
     g.restore();
 
+    if (c.tame || (c.trust ?? 0) > 0.05) this.drawTrust(c, screenX, t);
+
     // No wash over the far ones. An ellipse of water colour laid on top can
     // never match a creature's outline, so it reads as an oval stuck behind it
     // — and it was pointless anyway: fading towards the water that is already
     // behind them is exactly what distance does to colour.
+  }
+
+  /**
+   * How much a creature trusts her, over its head: a filling ring while it is
+   * being won round, a heart once it is tame, and a bright ring while she has
+   * the reins. Wordless, because she cannot read a progress bar either.
+   */
+  private drawTrust(c: Creature, screenX: number, t: number) {
+    const g = this.ctx;
+    const y = c.y - c.size * 1.15 - 10;
+    g.save();
+    g.translate(screenX, y);
+
+    if (!c.tame) {
+      g.strokeStyle = 'rgba(255,255,255,.45)';
+      g.lineWidth = 3;
+      g.beginPath(); g.arc(0, 0, 11, 0, 7); g.stroke();
+      g.strokeStyle = '#ff5c8a';
+      g.lineCap = 'round';
+      g.beginPath();
+      g.arc(0, 0, 11, -Math.PI / 2, -Math.PI / 2 + (c.trust ?? 0) * Math.PI * 2);
+      g.stroke();
+    } else {
+      const beat = 1 + Math.sin(t * 3 + c.phase) * 0.12;
+      g.scale(beat, beat);
+      if (c.driven) {
+        g.globalAlpha = 0.5 + 0.3 * Math.sin(t * 4);
+        g.strokeStyle = '#ffd166';
+        g.lineWidth = 3;
+        g.beginPath(); g.arc(0, 0, 15, 0, 7); g.stroke();
+        g.globalAlpha = 1;
+      }
+      g.fillStyle = '#ff5c8a';
+      g.beginPath();
+      g.moveTo(0, 6);
+      g.bezierCurveTo(-9, -2, -7, -10, 0, -6);
+      g.bezierCurveTo(7, -10, 9, -2, 0, 6);
+      g.fill();
+    }
+    g.restore();
   }
 
   private drawLabel(c: Creature) {
@@ -1324,7 +1481,7 @@ export class World {
     g.globalAlpha = Math.min(1, a * 1.6);
     g.font = 'bold 18px "Baloo 2", "Comic Sans MS", "Trebuchet MS", sans-serif';
     const w = g.measureText(c.name).width + 28;
-    const x = art.clamp(c.x, w / 2 + 8, this.width - w / 2 - 8);
+    const x = art.clamp(this.sx(c.x), w / 2 + 8, this.width - w / 2 - 8);
     const y = Math.max(38, c.y - c.size - 34);
     g.fillStyle = 'rgba(255,255,255,.96)';
     g.beginPath();

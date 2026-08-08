@@ -4,7 +4,7 @@
  */
 
 import type { Creature, Food, FoodKind } from './types';
-import { sandY, clamp, rnd } from '$lib/art';
+import { sandY, clamp, rnd, wrapWorld, wrapDelta } from '$lib/art';
 
 export interface Context {
   width: number;
@@ -91,7 +91,7 @@ function nearestFood(c: Creature, foods: Food[], range: number): { f: Food; d: n
   let bestD = 0;
   for (const f of foods) {
     if (!diet.includes(f.kind)) continue;   // it simply will not touch the rest
-    const d = Math.hypot(f.x - c.x, f.y - c.y);
+    const d = Math.hypot(wrapDelta(c.x, f.x), f.y - c.y);
     const liked = f.kind === fav;
     if (d > range * (liked ? 1.7 : 1)) continue;
     const score = liked ? d * 0.55 : d;
@@ -106,7 +106,8 @@ function tryEat(c: Creature, hit: { f: Food; d: number } | null, ctx: Context) {
 
 /** Steer velocity towards a point, with an easing that feels like water. */
 function steer(c: Creature, tx: number, ty: number, speed: number, ease: number, dt: number) {
-  const dx = tx - c.x, dy = ty - c.y;
+  // the short way round the loop, so nothing swims the long way home
+  const dx = wrapDelta(c.x, tx), dy = ty - c.y;
   const d = Math.hypot(dx, dy) || 1;
   const wantX = (dx / d) * speed;
   const wantY = (dy / d) * speed * 0.7;
@@ -123,7 +124,7 @@ function fleeFrom(c: Creature, ctx: Context): { x: number; y: number } | null {
   if (c.scary || c.size > 34) return null;
   let ax = 0, ay = 0, worst = 0;
   for (const p of ctx.scary) {
-    const dx = c.x - p.x, dy = c.y - p.y;
+    const dx = wrapDelta(p.x, c.x), dy = c.y - p.y;
     const d = Math.hypot(dx, dy) || 1;
     // a bold fish lets it come closer before bolting
     const range = 150 + p.size * 1.6 - (c.bold ?? 0.5) * 50;
@@ -147,12 +148,12 @@ function flock(c: Creature, ctx: Context) {
   let sepX = 0, sepY = 0, alignX = 0, alignY = 0, cohX = 0, cohY = 0, n = 0;
   for (const o of ctx.all) {
     if (o === c || o.shoal !== c.shoal) continue;
-    const dx = o.x - c.x, dy = o.y - c.y;
+    const dx = wrapDelta(c.x, o.x), dy = o.y - c.y;
     const d = Math.hypot(dx, dy);
     if (d > NEIGHBOUR || d === 0) continue;
     n++;
     alignX += o.vx; alignY += o.vy;
-    cohX += o.x; cohY += o.y;
+    cohX += c.x + dx; cohY += o.y;
     if (d < PERSONAL_SPACE) {
       sepX -= (dx / d) * (1 - d / PERSONAL_SPACE);
       sepY -= (dy / d) * (1 - d / PERSONAL_SPACE);
@@ -169,10 +170,9 @@ function flock(c: Creature, ctx: Context) {
 /** Keep a swimmer inside the glass and off the sand. */
 function bounds(c: Creature, ctx: Context) {
   const m = c.size * 1.1;
-  if (c.x < m) { c.x = m; c.vx = Math.abs(c.vx); c.tx = rnd(ctx.width * 0.4, ctx.width * 0.9); }
-  if (c.x > ctx.width - m) {
-    c.x = ctx.width - m; c.vx = -Math.abs(c.vx); c.tx = rnd(ctx.width * 0.1, ctx.width * 0.6);
-  }
+  // no left or right wall any more — the sea loops, so swim off one end and
+  // you come back on the other
+  c.x = wrapWorld(c.x);
   if (c.y < m * 0.8) { c.y = m * 0.8; c.vy = Math.abs(c.vy); }
 
   const clear = c.size * (c.upright ? 1.0 : 0.5);
@@ -187,12 +187,12 @@ function bounds(c: Creature, ctx: Context) {
     // — which is exactly what looked like getting stuck.
     // sandY grows downwards, so the larger side is the way out.
     const slope = (sandY(c.x + 6) - sandY(c.x - 6)) / 12;
-    c.x = clamp(c.x + slope * 9, m, ctx.width - m);
+    c.x = wrapWorld(c.x + slope * 9);
     c.vx += slope * 26;
 
     // and stop it aiming at a point buried in the hill
     if (c.ty !== null && c.tx !== null && c.ty > sandY(c.tx) - clear) {
-      c.tx = rnd(ctx.width * 0.1, ctx.width * 0.9);
+      c.tx = wrapWorld(c.x + rnd(-ctx.width * 0.4, ctx.width * 0.4));
       c.ty = rnd(ctx.height * 0.12, sandY(c.tx) - clear - 40);
     }
   }
@@ -225,7 +225,8 @@ const MODES: Record<string, (c: Creature, ctx: Context) => void> = {
       c.retarget -= ctx.dt;
       if (c.retarget <= 0 || c.tx === null) {
         c.retarget = rnd(2.2, 5);
-        c.tx = rnd(ctx.width * 0.06, ctx.width * 0.94);
+        // somewhere within a screen or so, not across the whole sea
+        c.tx = wrapWorld(c.x + rnd(-ctx.width * 0.55, ctx.width * 0.55));
         c.ty = rnd(ctx.height * 0.1, sandY(c.tx) - 60);
         if (c.kind === 'shark') c.ty = rnd(ctx.height * 0.1, ctx.height * 0.55);
         // tired creatures drop down to potter about near the reef
@@ -286,15 +287,13 @@ const MODES: Record<string, (c: Creature, ctx: Context) => void> = {
   drift(c, ctx) {
     c.y -= (12 + Math.sin(ctx.time * 1.8 + c.phase) * 10) * ctx.dt;
     c.x += Math.sin(ctx.time * 0.55 + c.phase) * 0.55;
-    if (c.y < -c.size * 2) { c.y = sandY(c.x) - 10; c.x = rnd(30, ctx.width - 30); }
+    if (c.y < -c.size * 2) { c.y = sandY(c.x) - 10; c.x = wrapWorld(c.x + rnd(-300, 300)); }
     c.dir = 1;
   },
 
   crawl(c, ctx) {
     if (c.crawlDir === undefined) c.crawlDir = Math.random() < 0.5 ? -1 : 1;
-    c.x += c.crawlDir * c.speed * ctx.dt * (c.wiggle > 0 ? 2 : 1);
-    if (c.x < 34) { c.x = 34; c.crawlDir = 1; }
-    if (c.x > ctx.width - 34) { c.x = ctx.width - 34; c.crawlDir = -1; }
+    c.x = wrapWorld(c.x + c.crawlDir * c.speed * ctx.dt * (c.wiggle > 0 ? 2 : 1));
     if (Math.random() < 0.004) c.crawlDir = (c.crawlDir * -1) as 1 | -1;
     c.y = sandY(c.x) + 6 + Math.sin(ctx.time * 6 + c.phase) * 1.5;
     c.sway = Math.sin(ctx.time * 1.6 + c.phase) * 0.05;
@@ -302,8 +301,8 @@ const MODES: Record<string, (c: Creature, ctx: Context) => void> = {
   },
 
   bob(c, ctx) {
-    if (c.homeX === undefined) c.homeX = clamp(c.x, c.size * 1.6, ctx.width - c.size * 1.6);
-    c.x = c.homeX + Math.sin(ctx.time * 0.5 + c.phase) * 22;
+    if (c.homeX === undefined) c.homeX = c.x;
+    c.x = wrapWorld(c.homeX + Math.sin(ctx.time * 0.5 + c.phase) * 22);
     c.y = sandY(c.x) - 70 + Math.sin(ctx.time * 1.1 + c.phase) * 18;
     c.sway = Math.sin(ctx.time * 0.8 + c.phase) * 0.07;
     c.dir = Math.cos(ctx.time * 0.5 + c.phase) > 0 ? 1 : -1;
@@ -316,8 +315,7 @@ const MODES: Record<string, (c: Creature, ctx: Context) => void> = {
    */
   static(c, ctx) {
     if (c.homeX === undefined) c.homeX = c.x;
-    c.homeX = clamp(c.homeX, 30, ctx.width - 30);
-    c.x = c.homeX + Math.sin(ctx.time * 0.42 + c.phase) * 7;
+    c.x = wrapWorld(c.homeX + Math.sin(ctx.time * 0.42 + c.phase) * 7);
     c.y = sandY(c.x) + 22 + Math.sin(ctx.time * 0.85 + c.phase * 1.7) * 2.5;
     c.sway = Math.sin(ctx.time * 0.55 + c.phase) * 0.09;
   }

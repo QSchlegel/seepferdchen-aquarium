@@ -74,6 +74,15 @@ export interface Creature extends CreatureSpec {
   flee?: number;
   /** 0 (shy) to 1 (nosy). Fixed at spawn, so each one behaves consistently. */
   bold?: number;
+  /**
+   * How much it trusts her, 0 to 1. Feeding it its favourite food builds this;
+   * at 1 it is tame and can be driven.
+   */
+  trust?: number;
+  /** True once trust is full. Tame creatures wear a little heart. */
+  tame?: boolean;
+  /** She is driving this one right now. */
+  driven?: boolean;
   /** How many pellets it has eaten. */
   fed: number;
   /** Wander target. */

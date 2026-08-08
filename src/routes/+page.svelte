@@ -13,6 +13,7 @@
   import type { HuntStage, World } from '$lib/sim/world';
   import type { FoodKind } from '$lib/sim/types';
   import Meta from '$lib/components/Meta.svelte';
+  import Joystick from '$lib/components/Joystick.svelte';
 
   /** The six treasures, as a row of slots she can fill. */
   const LOOT_ICON = [
@@ -36,6 +37,8 @@
   let paused = $state(false);
   let hunt = $state<HuntStage>('hidden');
   let food = $state<FoodKind>('pellet');
+  /** The reins only exist while she is actually riding something. */
+  let riding = $state(false);
   /** On a phone the six foods collapse to the one she is holding. */
   let compact = $state(false);
   let menuOpen = $state(true);
@@ -124,7 +127,15 @@
   onhunt={(s) => (hunt = s)}
   onpearl={onPearl}
   ontravel={(to) => ($settings.scene = to as typeof $settings.scene)}
+  ondrive={(r) => (riding = r)}
 />
+
+{#if riding}
+  <Joystick
+    onsteer={(x, y) => world?.setSteer(x, y)}
+    onrelease={() => world?.setSteer(0, 0)}
+  />
+{/if}
 
 <div class="hud">
   <div class="top" style="padding-top: calc(10px + env(safe-area-inset-top))">

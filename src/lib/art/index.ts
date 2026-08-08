@@ -31,6 +31,53 @@ export const RAINBOW = ['#ff6b9d', '#ff9f43', '#ffe066', '#7ef0c8', '#63d3f0', '
 /* the reef needs to know the tank it is drawn into */
 let W = 0, H = 0, SAND = 0;
 
+/**
+ * The sea is wider than the window. WORLD is the full looping length in
+ * pixels; CAM is where the window currently sits along it. Everything with a
+ * position stores *world* coordinates, and `sx()` turns those into screen
+ * coordinates, wrapping so the loop has no seam.
+ */
+let WORLD = 0, CAM = 0;
+
+export function setWorld(len: number) {
+  const changed = Math.abs(len - WORLD) > 0.5;
+  WORLD = Math.max(len, 1);
+  if (changed && W) buildScenery();
+}
+export function worldWidth() { return WORLD || W; }
+export function setCamera(x: number) { CAM = wrapWorld(x); }
+export function camera() { return CAM; }
+
+/** Bring any x back into [0, WORLD). */
+export function wrapWorld(x: number) {
+  const w = worldWidth();
+  return ((x % w) + w) % w;
+}
+
+/** The shortest signed distance from a to b around the loop. */
+export function wrapDelta(a: number, b: number) {
+  const w = worldWidth();
+  let d = (b - a) % w;
+  if (d > w / 2) d -= w;
+  if (d < -w / 2) d += w;
+  return d;
+}
+
+/** World x to screen x. Off-screen results are fine; callers cull on them. */
+export function sx(worldX: number) {
+  const w = worldWidth();
+  let d = ((worldX - CAM) % w + w) % w;
+  // anything further round than a screen-and-a-bit belongs to the left instead
+  if (d > w - W - 120) d -= w;
+  return d;
+}
+
+/** Is this world x worth drawing at all? */
+function onScreen(worldX: number, margin = 140) {
+  const d = sx(worldX);
+  return d > -margin && d < W + margin;
+}
+
 /* and which place it is. Set before setTank so the scenery grows to match. */
 let scene: Scene = SCENES[DEFAULT_SCENE];
 
@@ -64,6 +111,19 @@ function noise1(x: number) {
   const u = f * f * (3 - 2 * f);          // smoothstep, so no creases
   return hash1(i) * (1 - u) + hash1(i + 1) * u;
 }
+/**
+ * Layered noise that repeats exactly over one loop of the world.
+ *
+ * `u` runs 0..1 around the loop. Blending the value at u with the value at
+ * u-1, weighted by u, makes f(0) === f(1), so swimming past the end of a
+ * scene and round to the start again shows no seam.
+ */
+function loopFbm(u: number, seed: number, octaves = 4, freq = 3) {
+  const a = fbm(u * freq + seed, octaves);
+  const b = fbm((u - 1) * freq + seed, octaves);
+  return a * (1 - u) + b * u;
+}
+
 /** Layered noise: big shapes first, then finer and finer detail. */
 function fbm(x: number, octaves = 4) {
   let sum = 0, amp = 1, freq = 1, norm = 0;
@@ -85,23 +145,31 @@ function fbm(x: number, octaves = 4) {
  * settles, where the key lies — reads from this one function.
  */
 export function sandY(x: number) {
-  const u = x / Math.max(1, W);
+  // world coordinates now, and periodic: swim round the loop and the floor
+  // meets itself exactly
+  const u = wrapWorld(x) / worldWidth();
   const tr = scene.terrain;
-  const bank = Math.min(H * 0.17, Math.max(0, x - W * 0.66) * 0.32);
+  // the bank rises once per loop rather than once per screen
+  const bankU = (u - 0.66 + 1) % 1;
+  const bank = bankU < 0.34 ? Math.min(H * 0.17, bankU * worldWidth() * 0.32) : 0;
 
   // the seed moves the noise to a different stretch of coast, so every place
   // has its own landscape rather than the same dunes in a new colour
-  const rolling = (fbm(u * 3.1 + tr.seed, 4) - 0.5) * H * tr.roll;
-  const detail  = (fbm(u * 11 + 40 + tr.seed, 2) - 0.5) * H * 0.03;
-  const ridge = Math.pow(Math.max(0, Math.sin(u * tr.ridgeFreq + 1.2)), 8) * H * tr.ridge;
+  const rolling = (loopFbm(u, tr.seed, 4, 3.1 * scene.span) - 0.5) * H * tr.roll;
+  const detail  = (loopFbm(u, tr.seed + 40, 2, 11 * scene.span) - 0.5) * H * 0.03;
+  // the ridge frequency is per loop, so it closes on itself
+  const ridge = Math.pow(
+    Math.max(0, Math.sin(u * Math.PI * 2 * Math.round(tr.ridgeFreq * scene.span / 2) + 1.2)), 8
+  ) * H * tr.ridge;
 
   return SAND - H * tr.lift + rolling + detail - ridge - bank;
 }
 
 /** The far ridge line, well behind the playable floor. */
 export function farRidgeY(x: number) {
-  const u = x / Math.max(1, W);
-  return SAND - H * 0.10 + (fbm(u * 2.2 + 90 + scene.terrain.seed, 3) - 0.5) * H * 0.13;
+  const u = wrapWorld(x) / worldWidth();
+  return SAND - H * 0.10
+    + (loopFbm(u, scene.terrain.seed + 90, 3, 2.2 * scene.span) - 0.5) * H * 0.13;
 }
 
 function roundRect(x: number, y: number, w: number, h: number, r: number) {
@@ -130,8 +198,9 @@ function crowding() {
 /** How many of a thing grow here: the base density, by scene and by screen. */
 function grow(min: number, per: number, factor: number) {
   if (factor <= 0) return 0;
-  const n = Math.max(min, Math.round(W / per)) * factor * crowding();
-  return Math.max(factor > 0 ? 1 : 0, Math.round(n));
+  // density is per screen, so a longer scene grows proportionally more
+  const n = Math.max(min, Math.round(worldWidth() / per)) * factor * crowding();
+  return Math.max(1, Math.round(n));
 }
 
 function buildScenery(){
@@ -140,7 +209,13 @@ function buildScenery(){
   kelps = []; fans = []; sponges = []; anemones = []; shells = []; sandStars = [];
 
   // reef is densest on the left, thinning towards the sandy bank on the right
-  const reefX = () => Math.pow(Math.random(), 1.5) * W * .82 + rnd(-10, 24);
+  // spread over the whole loop, in world coordinates, still clumping into
+  // reefs rather than spacing out evenly
+  const reefX = () => {
+    const patch = Math.floor(Math.random() * Math.max(1, Math.round(scene.span * 1.6)));
+    const span = worldWidth() / Math.max(1, Math.round(scene.span * 1.6));
+    return wrapWorld(patch * span + Math.pow(Math.random(), 1.5) * span * .82 + rnd(-10, 24));
+  };
 
   for(let i = 0; i < grow(5, 170, scene.growth.seaweed); i++){
     seaweeds.push({ x: reefX(), h: rnd(H * .11, H * .26), w: rnd(6, 11),
@@ -280,20 +355,20 @@ function drawSand(){
   const g = ctx.createLinearGradient(0, SAND - H * .18, 0, H);
   g.addColorStop(0, scene.sand[0]); g.addColorStop(.5, scene.sand[1]); g.addColorStop(1, scene.sand[2]);
   ctx.fillStyle = g;
-  ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, sandY(0));
-  for(let x = 0; x <= W; x += 14) ctx.lineTo(x, sandY(x));
-  ctx.lineTo(W, sandY(W)); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, sandY(CAM));
+  for(let x = 0; x <= W; x += 14) ctx.lineTo(x, sandY(CAM + x));
+  ctx.lineTo(W, sandY(CAM + W)); ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
 
   // soft ripple lines in the sand
   ctx.save();
-  ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, sandY(0));
-  for(let x = 0; x <= W; x += 14) ctx.lineTo(x, sandY(x));
+  ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, sandY(CAM));
+  for(let x = 0; x <= W; x += 14) ctx.lineTo(x, sandY(CAM + x));
   ctx.lineTo(W, H); ctx.closePath(); ctx.clip();
   ctx.strokeStyle = 'rgba(200,168,110,.35)'; ctx.lineWidth = 2;
   for(let k = 1; k <= 5; k++){
     ctx.beginPath();
     for(let x = 0; x <= W; x += 16){
-      const y = sandY(x) + k * 26 + Math.sin(x * .012 + k) * 7;
+      const y = sandY(CAM + x) + k * 26 + Math.sin((CAM + x) * .012 + k) * 7;
       x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
     ctx.stroke();
@@ -301,21 +376,23 @@ function drawSand(){
   ctx.fillStyle = 'rgba(196,166,108,.5)';
   for(let i = 0; i < 70; i++){
     const x = (i * 137.5) % W;
-    ctx.fillRect(x, sandY(x) + 16 + ((i * 53) % Math.max(20, H - sandY(x) - 20)), 3, 2);
+    ctx.fillRect(x, sandY(CAM + x) + 16 + ((i * 53) % Math.max(20, H - sandY(CAM + x) - 20)), 3, 2);
   }
   ctx.restore();
 
   for(const r of rocks){
     ctx.fillStyle = r.col;
-    ctx.beginPath(); ctx.ellipse(r.x, sandY(r.x) + 14, r.w / 2, r.h, 0, Math.PI, 0); ctx.fill();
+    if(!onScreen(r.x)) continue;
+    ctx.beginPath(); ctx.ellipse(sx(r.x), sandY(r.x) + 14, r.w / 2, r.h, 0, Math.PI, 0); ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,.18)';
-    ctx.beginPath(); ctx.ellipse(r.x - r.w * .12, sandY(r.x) + 6, r.w * .18, r.h * .3, -.4, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(sx(r.x) - r.w * .12, sandY(r.x) + 6, r.w * .18, r.h * .3, -.4, 0, 7); ctx.fill();
   }
 }
 
 function drawShells(t){
   for(const sh of sandStars){
-    ctx.save(); ctx.translate(sh.x, sandY(sh.x) + sh.y); ctx.rotate(sh.rot); ctx.scale(sh.s, sh.s);
+    if(!onScreen(sh.x)) continue;
+    ctx.save(); ctx.translate(sx(sh.x), sandY(sh.x) + sh.y); ctx.rotate(sh.rot); ctx.scale(sh.s, sh.s);
     ctx.fillStyle = sh.col;
     ctx.beginPath();
     for(let i = 0; i < 10; i++){
@@ -331,7 +408,8 @@ function drawShells(t){
     ctx.restore();
   }
   for(const sh of shells){
-    ctx.save(); ctx.translate(sh.x, sandY(sh.x) + sh.y); ctx.rotate(sh.rot); ctx.scale(sh.s, sh.s);
+    if(!onScreen(sh.x)) continue;
+    ctx.save(); ctx.translate(sx(sh.x), sandY(sh.x) + sh.y); ctx.rotate(sh.rot); ctx.scale(sh.s, sh.s);
     ctx.fillStyle = sh.col;
     if(sh.type === 'scallop'){
       ctx.beginPath(); ctx.moveTo(0, 6);
@@ -366,8 +444,9 @@ function drawShells(t){
 /* --- reef plants ------------------------------------------------------- */
 function drawKelp(t){
   for(const k of kelps){
+    if(!onScreen(k.x)) continue;
     const base = sandY(k.x);
-    ctx.save(); ctx.translate(k.x, base + 6);
+    ctx.save(); ctx.translate(sx(k.x), base + 6);
     const segs = 7;
     ctx.fillStyle = k.col; ctx.globalAlpha = .92;
     for(const side of [-1, 1]){
@@ -399,8 +478,9 @@ function drawKelp(t){
 
 function drawFans(t){
   for(const f of fans){
+    if(!onScreen(f.x)) continue;
     const base = sandY(f.x);
-    ctx.save(); ctx.translate(f.x, base + 6);
+    ctx.save(); ctx.translate(sx(f.x), base + 6);
     ctx.rotate(f.lean + Math.sin(t * .5 + f.phase) * .05);
     ctx.strokeStyle = f.col; ctx.lineCap = 'round';
     const branch = (x, y, ang, len, w, d) => {
@@ -423,8 +503,9 @@ function drawFans(t){
 
 function drawSponges(t){
   for(const sp of sponges){
+    if(!onScreen(sp.x)) continue;
     const base = sandY(sp.x);
-    ctx.save(); ctx.translate(sp.x, base + 6); ctx.scale(sp.s, sp.s);
+    ctx.save(); ctx.translate(sx(sp.x), base + 6); ctx.scale(sp.s, sp.s);
     for(let i = 0; i < sp.n; i++){
       const off = (i - (sp.n - 1) / 2) * 20 + Math.sin(sp.phase + i) * 5;
       const hgt = 40 + ((i * 37 + sp.phase * 13) % 46);
@@ -444,8 +525,9 @@ function drawSponges(t){
 
 function drawAnemones(t){
   for(const a of anemones){
+    if(!onScreen(a.x)) continue;
     const base = sandY(a.x);
-    ctx.save(); ctx.translate(a.x, base + 6); ctx.scale(a.s, a.s);
+    ctx.save(); ctx.translate(sx(a.x), base + 6); ctx.scale(a.s, a.s);
     ctx.lineCap = 'round';
     for(let i = 0; i < 13; i++){
       const ang = -Math.PI / 2 + (i - 6) * .21;
@@ -483,8 +565,9 @@ function drawSeaweed(t){
 
 function drawCoral(){
   for(const c of corals){
+    if(!onScreen(c.x)) continue;
     const base = sandY(c.x);
-    ctx.save(); ctx.translate(c.x, base + 6); ctx.scale(c.s, c.s);
+    ctx.save(); ctx.translate(sx(c.x), base + 6); ctx.scale(c.s, c.s);
     ctx.strokeStyle = c.col; ctx.lineCap = 'round';
     for(let a = 0; a < c.arms; a++){
       const ang = -Math.PI / 2 + (a - (c.arms - 1) / 2) * 0.42 + Math.sin(c.seed + a) * .08;
@@ -507,7 +590,7 @@ function drawCoral(){
 
 /** Where the wreck lies, and the mouth of its hold, in tank coordinates. */
 export function wreckPos() {
-  const x = W * 0.34;
+  const x = worldWidth() * 0.42;
   return { x, y: sandY(x) + 12, w: Math.min(W * 0.52, 520), h: Math.min(H * 0.3, 210) };
 }
 
@@ -599,7 +682,7 @@ function drawWreck(t, lit = 0){
 
 /** Where the chest stands. The world needs this to aim taps at it. */
 export function chestPos() {
-  const x = W * 0.63;
+  const x = worldWidth() * 0.18;
   return { x, y: sandY(x) + 10 };
 }
 
@@ -842,22 +925,25 @@ export function setHeadlands(list: typeof headlands) { headlands = list; }
  * which is what gives the background depth as she moves.
  */
 export function ridgeY(layer: number, x: number) {
-  const u = x / Math.max(1, W);
+  const u = wrapWorld(x) / worldWidth();
   const seed = scene.terrain.seed + layer * 57;
   const lift = H * (0.16 - layer * 0.05);
 
   // Broad shape, then finer roughness, then the odd sharp spire. Three
   // octaves alone gave a smooth rolling line that read as a painted backdrop;
   // rock needs detail at more than one scale to look like rock.
-  let y = SAND - lift + (fbm(u * (1.7 + layer * 0.7) + seed, 4) - 0.5) * H * (0.1 + layer * 0.03);
-  y += (fbm(u * (9 + layer * 4) + seed * 1.7, 2) - 0.5) * H * 0.022;
+  let y = SAND - lift
+    + (loopFbm(u, seed, 4, (1.7 + layer * 0.7) * scene.span) - 0.5) * H * (0.1 + layer * 0.03);
+  y += (loopFbm(u, seed * 1.7, 2, (9 + layer * 4) * scene.span) - 0.5) * H * 0.022;
   // pinnacles, narrow and only where the noise already stands high
-  const spike = Math.pow(Math.max(0, Math.sin(u * (11 + layer * 5) + seed * 0.7)), 16);
+  const spike = Math.pow(
+    Math.max(0, Math.sin(u * Math.PI * 2 * Math.round((11 + layer * 5) * scene.span / 2) + seed * 0.7)), 16
+  );
   y -= spike * H * 0.055 * (1 - layer * 0.2);
 
   if (layer === RIDGE_LAYERS - 1) {
     for (const h of headlands) {
-      const d = (x - h.x) / (h.r * 2.1);
+      const d = wrapDelta(h.x, x) / (h.r * 2.1);
       // the land rises into a headland wherever there is somewhere to go,
       // and dips either side of it so the shape funnels the eye inwards
       const bell = Math.exp(-d * d);
@@ -933,8 +1019,8 @@ function drawRidgeLayer(layer: number, t: number){
   ctx.fillStyle = col;
   ctx.beginPath();
   ctx.moveTo(-40, H);
-  ctx.lineTo(-40, ridgeY(layer, -40));
-  for(let x = -40; x <= W + 40; x += 12) ctx.lineTo(x, ridgeY(layer, x));
+  ctx.lineTo(-40, ridgeY(layer, CAM - 40));
+  for(let x = -40; x <= W + 40; x += 12) ctx.lineTo(x, ridgeY(layer, CAM + x));
   ctx.lineTo(W + 40, H);
   ctx.closePath();
   ctx.fill();
@@ -942,9 +1028,9 @@ function drawRidgeLayer(layer: number, t: number){
   // growth along the skyline, so the crest is not a bare drawn line
   const step = 26 + layer * 10;
   for(let x = 0; x <= W; x += step){
-    const j = hash1(x * 0.37 + layer * 13 + scene.terrain.seed);
+    const j = hash1(Math.round(CAM + x) * 0.37 + layer * 13 + scene.terrain.seed);
     if(j < 0.45) continue;
-    const gy = ridgeY(layer, x);
+    const gy = ridgeY(layer, CAM + x);
     const h2 = (6 + j * 22) * (1 - layer * 0.22);
     ctx.beginPath();
     ctx.moveTo(x - h2 * 0.3, gy + 2);
