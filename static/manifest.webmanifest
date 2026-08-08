@@ -1,0 +1,16 @@
+{
+  "name": "Seepferdchen-Aquarium",
+  "short_name": "Aquarium",
+  "description": "Ein Aquarium zum Anfassen, in der Welt vom Seepferdchenhof",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#2b96be",
+  "theme_color": "#2b96be",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

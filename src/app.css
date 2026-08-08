@@ -1,0 +1,82 @@
+/* One place for the look of the whole app. */
+:root {
+  --water-top: #a9e7de;
+  --water-mid: #3fa8c9;
+  --water-deep: #155c86;
+  --sand: #efd9a0;
+  --ink: #10394f;
+  --card: rgba(255, 255, 255, 0.9);
+  --chip: rgba(255, 255, 255, 0.28);
+  --chip-line: rgba(255, 255, 255, 0.62);
+  --radius: 20px;
+  --tap: 56px;
+  --font: "Baloo 2", "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font);
+  color: #fff;
+  background: linear-gradient(var(--water-top) 0%, #77d3d6 22%, var(--water-mid) 50%, #1f7ba8 78%, var(--water-deep) 100%);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+button, a { font-family: inherit; }
+
+/* A pill button, big enough for a five-year-old to hit. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--tap);
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: 2px solid var(--chip-line);
+  background: var(--chip);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  text-decoration: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.12s ease, background 0.2s ease;
+}
+.chip:active { transform: scale(0.94); background: rgba(255, 255, 255, 0.48); }
+.chip.on { background: rgba(255, 214, 110, 0.55); }
+.chip.small { min-height: 44px; padding: 9px 15px; font-size: 15px; }
+
+.page {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(110px + env(safe-area-inset-bottom));
+}
+
+h1 { font-size: 26px; margin: 4px 0 16px; text-shadow: 0 2px 8px rgba(0, 40, 65, 0.5); }
+h2 { font-size: 19px; margin: 22px 0 10px; opacity: 0.92; }
+
+.card {
+  background: var(--card);
+  color: var(--ink);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: 0 6px 18px rgba(0, 40, 65, 0.18);
+}
+
+@media (max-width: 430px) {
+  h1 { font-size: 22px; }
+  .chip { font-size: 16px; padding: 12px 16px; }
+}
