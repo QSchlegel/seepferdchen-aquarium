@@ -29,6 +29,15 @@ reasoning about canvas coordinates.
 - Comments explain *why*, especially around a workaround.
 - Read [[Gotchas]] first — it will save you an afternoon.
 
+## How it gets published
+
+`main` deploys itself. Railway watches this repository and builds on every
+push, using the Dockerfile — `railway.json` pins that, and without it the build
+would fall to Railpack, which finds no `start` script because the site is
+static and served by Caddy.
+
+Live at [lucilleschlegel.com](https://lucilleschlegel.com).
+
 ## For agents
 
 [[../AGENTS.md|AGENTS.md]] and [[../CLAUDE.md|CLAUDE.md]] at the repository root.
