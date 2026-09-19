@@ -126,11 +126,10 @@
 <style>
   .pad {
     position: fixed;
-    left: 0;
-    bottom: calc(84px + env(safe-area-inset-bottom));
+    left: calc(6px + var(--edge-left));
+    bottom: calc(84px + var(--edge-bottom));
     width: min(190px, 42vw);
     height: min(190px, 42vw);
-    margin-left: 6px;
     z-index: 42;
     touch-action: none;
     border-radius: 26px;
@@ -180,6 +179,18 @@
 
   @media (min-width: 561px) {
     /* on a desktop the keyboard is the main way to drive, so this is smaller */
-    .pad { width: 150px; height: 150px; left: 92px; bottom: 16px; }
+    .pad {
+      width: 150px;
+      height: 150px;
+      left: calc(92px + var(--edge-left));
+      bottom: calc(16px + var(--edge-bottom));
+    }
+  }
+
+  /* sideways on a phone: beside the menu button, out of the reef */
+  @media (max-height: 460px) {
+    .pad { width: 128px; height: 128px; left: calc(76px + var(--edge-left)); }
+    .ring { width: 78px; height: 78px; }
+    .knob { width: 40px; height: 40px; }
   }
 </style>

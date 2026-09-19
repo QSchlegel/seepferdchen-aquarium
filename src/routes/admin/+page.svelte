@@ -199,7 +199,15 @@
 </div>
 
 <style>
-  .page { max-width: 1040px; margin: 0 auto; padding: 8px 10px 90px; }
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding:
+      calc(8px + var(--edge-top))
+      calc(10px + var(--edge-right))
+      calc(90px + var(--edge-bottom))
+      calc(10px + var(--edge-left));
+  }
   header { text-align: center; margin-bottom: 8px; }
   h1 { margin: 0 0 2px; font-size: 26px; }
   .sub { margin: 0; font-size: 13px; opacity: 0.85; }

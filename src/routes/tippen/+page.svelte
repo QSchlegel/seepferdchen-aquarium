@@ -11,12 +11,20 @@
   import { t } from '$lib/data/i18n';
   import { sfx } from '$lib/audio';
   import { onMount } from 'svelte';
+  import { short } from '$lib/stores/viewport';
   import type { CreatureSpec } from '$lib/sim/types';
   import Meta from '$lib/components/Meta.svelte';
 
   const POOL = GALLERY.filter((c) => c.id !== 'ellistormi');
 
   const ROWS = ['QWERTZUIOP', 'ASDFGHJKLÖÄ', 'YXCVBNMÜ'];
+  /**
+   * How many keys the widest row has. The keyboard divides the screen by this
+   * so every key is the same size and no row ever wraps — an eleven-key row
+   * used to fold its last letter onto a line of its own on a phone, which
+   * looks like the keyboard is broken rather than merely narrow.
+   */
+  const COLS = Math.max(...ROWS.map((r) => r.length));
 
   let mode = $state<'first' | 'whole'>('first');
   let spec = $state<CreatureSpec | null>(null);
@@ -112,7 +120,7 @@
 
   {#if spec}
     <div class="card ask" class:right={won} class:wrong={!!wrong}>
-      <CreaturePortrait {spec} size={112} />
+      <CreaturePortrait {spec} size={$short ? 68 : 112} />
       <span class="find">
         {t(mode === 'first' ? 'typeFirst' : 'typeName', $settings.lang)}
       </span>
@@ -137,7 +145,7 @@
 
     <p class="hint">{t('keyboardHint', $settings.lang)}</p>
 
-    <div class="keyboard">
+    <div class="keyboard" style="--cols:{COLS}">
       {#each ROWS as row}
         <div class="row">
           {#each [...row] as k (k)}
@@ -193,12 +201,24 @@
 
   .hint { text-align: center; font-size: 14px; opacity: 0.75; margin: 12px 0 8px; }
 
-  .keyboard { display: flex; flex-direction: column; gap: 6px; align-items: center; }
-  .row { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+  .keyboard {
+    --gap: 5px;
+    /* Every key the same width, and the widest row decides it. On a 375px
+       phone that lands near the width of the system keyboard's own keys,
+       which is the shape her fingers already know. */
+    --key: min(46px, calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols)));
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+    /* stretch, so a row has a width for the key sum to divide */
+    align-items: stretch;
+  }
+  .row { display: flex; gap: var(--gap); justify-content: center; flex-wrap: nowrap; }
   .key {
-    min-width: 34px;
-    min-height: 44px;
-    padding: 0 6px;
+    width: var(--key);
+    flex: none;
+    min-height: 48px;
+    padding: 0;
     border-radius: 11px;
     border: 2px solid rgba(255, 255, 255, 0.55);
     background: rgba(255, 255, 255, 0.28);
@@ -219,7 +239,24 @@
   }
   .key.bad { background: rgba(255, 120, 110, 0.8); }
 
-  @media (max-width: 380px) {
-    .key { min-width: 28px; min-height: 40px; font-size: 15px; }
+  @media (max-width: 430px) {
+    /* the keyboard takes back the page's side padding: those 16px are two
+       millimetres on every key, and a key is already as small as it can be */
+    .keyboard { --gap: 4px; width: calc(100% + 16px); margin-inline: -8px; }
+    .key { font-size: 15px; }
+    .slot { min-width: 26px; height: 38px; font-size: 23px; }
+  }
+
+  /* Sideways on a phone the card filled the screen and pushed the keyboard
+     clean off the bottom — the one thing this page is for. */
+  @media (max-height: 460px) {
+    .scoreline { margin-bottom: 7px; }
+    /* a card the full width of a sideways phone is mostly empty card */
+    .ask { padding: 7px 10px; gap: 2px; max-width: 560px; margin-inline: auto; }
+    .find { display: none; }
+    .hint { display: none; }
+    .slot { height: 34px; font-size: 21px; border-width: 2px; }
+    /* still a 44px key: sideways buys the room from the card, not the target */
+    .key { min-height: 44px; }
   }
 </style>

@@ -72,4 +72,12 @@
   strong { font-size: 16px; }
   .about { font-size: 12.5px; line-height: 1.35; opacity: 0.8; }
   .go { font-size: 12px; font-weight: 700; opacity: 0.6; margin-top: 2px; }
+
+  @media (max-width: 560px) {
+    /* On a phone this line wrapped onto two, pushing every card taller and
+       halving how many animals she can see at once — and the whole card has
+       always been the button. The arrow was never doing any work. */
+    .go { display: none; }
+    .grid { gap: 14px 10px; }
+  }
 </style>

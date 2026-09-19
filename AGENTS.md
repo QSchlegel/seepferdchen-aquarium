@@ -26,7 +26,7 @@ rendering, no runtime dependencies.
 | Command | Purpose |
 |---|---|
 | `npm run dev` | dev server |
-| `npm test` | ~100 headless tests |
+| `npm test` | ~130 headless tests |
 | `npm run check` | svelte-check, must report 0 errors |
 | `npm run build` | regenerates the module graph, then builds |
 | `npm run graph` | regenerate the module graph only |
@@ -39,12 +39,17 @@ rendering, no runtime dependencies.
 - `fillStyle = undefined` **fails silently**. Add a `kind` and you must supply
   every palette field its routine reads.
 - Svelte 5: **plain classes are not reactive**, and values computed in
-  `onMount` **do not follow prop changes**.
+  `onMount` **do not follow prop changes** — including a `matchMedia` read,
+  which is what `stores/viewport.ts` is for.
+- A phone **eats taps in the home bar and under the notch**. Pin to
+  `--edge-top`/`-bottom`/`-left`/`-right` (app.css), never to 0.
+  `src/test/edges.test.ts` enforces it.
 
 ## Expectations for a change
 
 - Write the test that would have caught the bug, not one that restates the fix.
-- Check visual work visually — build it and look at it.
+- Check visual work visually — build it and look at it, at 375×667 and
+  844×390 as well as on a desktop.
 - Comment *why*, not *what*, especially around a workaround.
 - Say plainly what you verified and what you did not.
 

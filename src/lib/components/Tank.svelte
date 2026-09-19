@@ -102,7 +102,12 @@
 
     const ro = new ResizeObserver(fit);
     ro.observe(host);
-    window.addEventListener('orientationchange', () => setTimeout(fit, 300));
+    // iOS reports the old size for a moment after a turn, so refit once the
+    // dust has settled. Named, because an anonymous listener left behind here
+    // keeps resizing a dead canvas every time she turns the tablet.
+    let turn = 0;
+    const rotated = () => { clearTimeout(turn); turn = window.setTimeout(fit, 300); };
+    window.addEventListener('orientationchange', rotated);
 
     let last = performance.now();
     let stage: HuntStage = w.treasure.stage;
@@ -145,7 +150,9 @@
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
-      stopStream();
+      stopAllStreams();
+      clearTimeout(turn);
+      window.removeEventListener('orientationchange', rotated);
       window.removeEventListener('keydown', key);
       document.removeEventListener('visibilitychange', vis);
     };
@@ -175,19 +182,27 @@
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
 
-  let drag: { x: number; y: number; moved: number } | null = null;
-  let stream = 0;
+  /**
+   * One of these per finger on the glass.
+   *
+   * A child does not use the tank one finger at a time — she puts a whole hand
+   * on it. With a single drag object the second finger took the first one's
+   * place: only the last one stirred the water, lifting either one stopped the
+   * other's bubbles, and a tap anywhere cancelled a journey somebody was
+   * holding a doorway open for.
+   */
+  type Finger = { x: number; y: number; moved: number; stream: number; holding: boolean };
+  const fingers = new Map<number, Finger>();
   let lean = { x: 0, y: 0 };
 
   /** After this long without moving, a held finger starts blowing bubbles. */
   const HOLD_MS = 400;
 
-  function startStream(x: number, y: number) {
-    stopStream();
-    stream = window.setInterval(() => world?.bubbleStream(x, y), 90);
+  function stopStream(f: Finger) {
+    if (f.stream) { clearInterval(f.stream); f.stream = 0; }
   }
-  function stopStream() {
-    if (stream) { clearInterval(stream); stream = 0; }
+  function stopAllStreams() {
+    for (const f of fingers.values()) stopStream(f);
   }
 
   function down(e: PointerEvent) {
@@ -195,11 +210,13 @@
     // capture can throw if the pointer is already gone; never lose the tap over it
     try { canvas.setPointerCapture(e.pointerId); } catch { /* fine */ }
     const { x, y } = at(e);
-    drag = { x, y, moved: 0 };
+    const f: Finger = { x, y, moved: 0, stream: 0, holding: false };
+    fingers.set(e.pointerId, f);
     world?.pressPointer();
 
     // a doorway takes a hold, not a tap — no bubbles, no food, just the ring
     if (world?.beginHold(x, y)) {
+      f.holding = true;
       if ($settings.sound) sfx.pop();
       return;
     }
@@ -212,7 +229,10 @@
     }
     if (!hit && $settings.sound) sfx.plop();
     // holding still on one spot turns her finger into a bubbler
-    setTimeout(() => { if (drag && drag.moved < 10) startStream(drag.x, drag.y); }, HOLD_MS);
+    setTimeout(() => {
+      if (fingers.get(e.pointerId) !== f || f.moved >= 10) return;
+      f.stream = window.setInterval(() => world?.bubbleStream(f.x, f.y), 90);
+    }, HOLD_MS);
   }
 
   function move(e: PointerEvent) {
@@ -224,25 +244,32 @@
       lean = { x: (x / canvas.clientWidth - 0.5) * 1.6, y: (y / canvas.clientHeight - 0.5) * 1.2 };
       canvas.style.cursor = 'none';
     }
-    if (!drag) return;
-    const dx = x - drag.x, dy = y - drag.y;
-    drag.moved += Math.hypot(dx, dy);
-    if (drag.moved > 10) stopStream();
-    // sliding off the doorway cancels the journey
-    if (world.hold && drag.moved > 24) world.cancelHold();
-    if (world.hold) { drag.x = x; drag.y = y; return; }
-    drag.x = x; drag.y = y;
+    const f = fingers.get(e.pointerId);
+    if (!f) return;
+    const dx = x - f.x, dy = y - f.y;
+    f.moved += Math.hypot(dx, dy);
+    if (f.moved > 10) stopStream(f);
+    if (f.holding) {
+      // sliding off the doorway cancels the journey
+      if (f.moved > 24) { world.cancelHold(); f.holding = false; }
+      f.x = x; f.y = y;
+      return;
+    }
+    f.x = x; f.y = y;
     world.swipe(x, y, dx, dy);
   }
 
-  function up() {
-    drag = null;
-    stopStream();
-    world?.cancelHold();
+  function up(e: PointerEvent) {
+    const f = fingers.get(e.pointerId);
+    if (!f) return;
+    fingers.delete(e.pointerId);
+    stopStream(f);
+    // only the finger that started the journey gets to call it off
+    if (f.holding) world?.cancelHold();
   }
 
   function leave(e: PointerEvent) {
-    up();
+    up(e);
     if (e.pointerType === 'mouse') {
       world?.clearPointer();
       lean = { x: 0, y: 0 };

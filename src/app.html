@@ -2,7 +2,13 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <!--
+    viewport-fit=cover is what makes env(safe-area-inset-*) report anything;
+    every control pinned to an edge measures from those (see --edge-* in
+    app.css). interactive-widget shrinks the page when the on-screen keyboard
+    comes up, so the name box in the creature maker is not left underneath it.
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

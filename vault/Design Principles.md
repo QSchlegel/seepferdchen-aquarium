@@ -26,9 +26,21 @@ the swell. See [[The Tank#Behaviour]].
 ## 4. Generous targets
 
 Small fingers, moving targets, a tablet on a sofa. Minimum tap radius is 42px
-regardless of how small the creature is drawn.
+regardless of how small the creature is drawn. That applies to the chrome as
+much as the creatures: the story's page dots are 12px to look at and 44px to
+hit, and the food buttons are square rather than letterbox for the same reason.
 
-## 5. The simulation is framework-free
+And a target is only generous if the device lets her reach it — see
+[[Gotchas#The edges of the screen]].
+
+## 5. The phone is the device
+
+She plays on a phone or a tablet, held either way up, usually lying down. Every
+screen has to work at 375×667 and at 844×390, which is the harder of the two:
+sideways there is about 390px of height for everything, so the grown-up's
+flavour text goes and the thing she came for stays.
+
+## 6. The simulation is framework-free
 
 `sim/` and `art/` never import Svelte. That is why ~100 behaviour tests run
 headlessly in under a second. See [[Architecture]].

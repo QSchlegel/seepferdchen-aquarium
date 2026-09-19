@@ -38,6 +38,10 @@ Start here if you have never touched the code.
 - [ ] **Better shell and starfish drawings on the sand** `#art`
 - [ ] **A sound for each kind of food landing** `#code`
 - [ ] **Let her rename a creature she made** `#code`
+- [ ] **Read the story page aloud** `#code` `#kid-friendly`
+  `speakAll()` in `speech.ts` already exists and nothing calls it. A 🔊 button
+  on `/geschichte` would make the one screen that is pure text usable by the
+  person the app is for.
 - [ ] **Show which foods a creature likes on its card** `#design` `#kid-friendly`
 
 ## Medium — a weekend
@@ -54,10 +58,15 @@ Start here if you have never touched the code.
 - [ ] **Improve the spoken voice** `#code`
   Rate, pitch and voice selection in `speech.ts`; a toggle separate from sound.
 - [ ] **Refresh the share image and the app icon** `#art`
-- [ ] **Finish the PWA** `#code`
-  Manifest and service worker exist. Audit installability properly.
+- [x] **Finish the PWA** `#code`
+  Installable, with an offer in the settings sheet (Chrome prompts, iOS gets
+  told where the Share button is), screenshots in the manifest so the install
+  dialog shows what it is, and `src/test/pwa.test.ts` to keep it that way.
 - [ ] **A deeper maker** `#design` `#code`
   Patterns, fin shapes, eye styles, accessories.
+- [ ] **The maker as two columns on a sideways phone** `#design`
+  Creature on the left, controls on the right. Everything fits on one screen
+  now except the name box, which still needs a scroll.
 - [ ] **Share a creature by link or QR** `#code`
   Encode a creature into a URL another child can open. No server, no accounts,
   nothing stored about anyone.
@@ -69,7 +78,11 @@ Start here if you have never touched the code.
   before starting.
 - [ ] **Record her own voice for the names** `#design`
 - [ ] **A drawing tool so she can draw a creature freehand** `#art` `#code`
-- [ ] **Make the whole thing work offline on a plane** `#code`
+- [x] **Make the whole thing work offline on a plane** `#code`
+  Every page, script and picture is precached on first visit; verified by
+  loading the app, killing the server and walking the nine places. What is
+  *not* covered: the spoken names use whichever voices the device has, and a
+  device that has never opened the app has nothing to cache from.
 
 ## Known rough edges
 
@@ -79,4 +92,13 @@ Honest list of what is not right yet.
 - [ ] The find game still leans on reading, with speech as the workaround.
 - [ ] `npm audit` reports dev-dependency vulnerabilities.
 - [ ] Some drawing routines are long and hard to follow.
-- [ ] No end-to-end tests — the games are only verified by hand.
+- [ ] No end-to-end tests — the games are only verified by hand. Layout is
+  checked by eye at 375×667 and 844×390, and by `src/test/edges.test.ts`
+  reading the CSS; nothing runs in a real browser.
+- [ ] `world.test.ts` "does not leave a swimmer grinding against a slope" fails
+  about one full `npm test` run in twenty, on `main` as well. A free swimmer
+  occasionally ends its fourteen seconds within 20px of where it started —
+  a loop home, not a creature that is stuck. It needs a fairer measure than
+  start-to-end distance.
+- [ ] The treasure shelf is hidden on a phone — the top row has no space for
+  it — so her six treasures are invisible on the device she actually uses.

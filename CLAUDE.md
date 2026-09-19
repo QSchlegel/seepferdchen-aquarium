@@ -32,7 +32,7 @@ src/routes/       one directory per screen
 
 The split that matters: **`sim/` and `art/` know nothing about Svelte.** The
 simulation is a plain class you can construct in a test with a stub canvas and
-step by hand. Keep it that way — it is why there are ~100 tests for behaviour
+step by hand. Keep it that way — it is why there are ~130 tests for behaviour
 that would otherwise need a browser.
 
 `/admin` draws the live module graph if you want to see the real shape.
@@ -55,12 +55,17 @@ Learn these rather than rediscovering them:
   callback instead.
 - **Values computed in `onMount` do not follow prop changes.** This broke the
   creature maker: the portrait's bounding box was computed once, so every later
-  body was drawn with the first one's fit.
+  body was drawn with the first one's fit. A media query read once at mount has
+  the same problem when the tablet is turned over — use `stores/viewport.ts`.
+- **A phone eats taps at the edges of the screen.** Anything pinned to an edge
+  measures from `--edge-top`/`-bottom`/`-left`/`-right` in `app.css`, never
+  from 0. The menu button sat in the home bar and needed two taps, every time.
+  `src/test/edges.test.ts` fails the build if a new control forgets.
 
 ## Verifying
 
 ```bash
-npm test          # ~100 tests, all headless, all fast
+npm test          # ~130 tests, all headless, all fast
 npm run check     # svelte-check, must be clean
 npm run build     # regenerates the module graph, then builds
 ```
@@ -71,13 +76,21 @@ colour" or "run the sim for forty seconds and assert nobody is inside a rock" �
 those catch whole categories.
 
 Verify visually too when the change is visual. A screenshot of the built site
-beats reasoning about canvas coordinates.
+beats reasoning about canvas coordinates — and at 375×667 and 844×390, not
+just at desktop width. She plays on a phone, held either way up.
 
 ## Deploying
 
 Static build, served by Caddy, on Railway. `railway.json` pins the builder to
 the Dockerfile — do not remove it, there is no `start` script and Railpack
 would produce a broken deploy.
+
+It is also an installable app. Three things have to stay true, and the
+`Caddyfile` is where two of them live: the manifest is served as
+`application/manifest+json`, and neither it nor `service-worker.js` may be
+cached. The third is `src/service-worker.ts`, which precaches `build`, `files`
+**and** `prerendered` — see [Gotchas](vault/Gotchas.md). `src/test/pwa.test.ts`
+guards what it can from Node.
 
 ## Tone
 

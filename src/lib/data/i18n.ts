@@ -72,7 +72,12 @@ const T: Dict = {
   krill:       { de: 'Krill',           en: 'Krill' },
   candy:       { de: 'Zuckerwatte',     en: 'Candy floss' },
   muesli:      { de: 'Muschel-Müsli',   en: 'Shell muesli' },
-  plankton:    { de: 'Seetang-Plankton', en: 'Seaweed plankton' }
+  plankton:    { de: 'Seetang-Plankton', en: 'Seaweed plankton' },
+  install:     { de: 'Aufs Handy holen', en: 'Add to your phone' },
+  installNow:  { de: 'Installieren',     en: 'Install' },
+  installIos:  { de: 'Teilen-Knopf antippen, dann „Zum Home-Bildschirm“',
+                 en: 'Tap the share button, then “Add to Home Screen”' },
+  offlineYes:  { de: 'Funktioniert auch ohne Internet', en: 'Works without the internet' }
 };
 
 export function t(key: string, lang: Lang): string {

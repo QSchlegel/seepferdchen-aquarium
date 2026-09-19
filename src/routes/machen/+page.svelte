@@ -10,10 +10,12 @@
   import Meta from '$lib/components/Meta.svelte';
   import { addMine, mine, removeMine, toSpec, type MyCreature } from '$lib/stores/mine';
   import { settings } from '$lib/stores/settings';
+  import { short } from '$lib/stores/viewport';
   import { sfx } from '$lib/audio';
   import { speak } from '$lib/speech';
   import { t } from '$lib/data/i18n';
   import { goto } from '$app/navigation';
+  import { onDestroy } from 'svelte';
 
   /** The bodies she can start from. */
   const KINDS = [
@@ -94,13 +96,46 @@
   function show(id: string) {
     goto(`/?find=${id}`);
   }
+
+  /**
+   * Throwing one away takes two taps.
+   *
+   * The bin sits a thumb's width from the creature's own picture, and on a
+   * phone that is one mis-tap away from losing something she made — which is
+   * the one thing this aquarium promises cannot happen. The first tap arms it
+   * and it turns red; the second throws it away; it disarms itself if she
+   * does nothing, so a wrong tap costs her nothing at all.
+   */
+  let arming = $state<string | null>(null);
+  let disarm = 0;
+
+  function bin(id: string) {
+    clearTimeout(disarm);
+    if (arming === id) {
+      arming = null;
+      removeMine(id);
+      if ($settings.sound) sfx.plop();
+      return;
+    }
+    arming = id;
+    if ($settings.sound) sfx.pop();
+    disarm = window.setTimeout(() => (arming = null), 3000);
+  }
+
+  onDestroy(() => clearTimeout(disarm));
+
+  /** iOS slides the keyboard over the bottom half; bring the box up with it. */
+  function keepVisible(e: FocusEvent) {
+    const el = e.currentTarget as HTMLElement;
+    setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250);
+  }
 </script>
 
 <Meta path="/machen" />
 
 <div class="page">
   <div class="stage">
-    <CreaturePortrait spec={preview} size={190} />
+    <CreaturePortrait spec={preview} size={$short ? 118 : 190} />
     {#if sparkly}<span class="twinkle">✨</span>{/if}
   </div>
 
@@ -160,6 +195,7 @@
       bind:value={name}
       maxlength="14"
       placeholder="???"
+      onfocus={keepVisible}
       aria-label={t('name', $settings.lang)}
     />
     <button class="chip save" onclick={save}>✅</button>
@@ -173,7 +209,12 @@
             <CreaturePortrait spec={toSpec(c)} size={84} />
           </button>
           <strong>{c.name}</strong>
-          <button class="bin" onclick={() => removeMine(c.id)} aria-label="🗑">🗑</button>
+          <button
+            class="bin"
+            class:armed={arming === c.id}
+            onclick={() => bin(c.id)}
+            aria-label="🗑"
+          >{arming === c.id ? '❌' : '🗑'}</button>
         </div>
       {/each}
     </div>
@@ -181,7 +222,7 @@
 </div>
 
 <style>
-  .page { padding-bottom: 96px; }
+  .page { padding-bottom: calc(96px + var(--edge-bottom)); }
 
   .stage {
     position: relative;
@@ -219,9 +260,9 @@
     border: 2px solid rgba(255, 255, 255, 0.8);
   }
 
-  .palette { max-width: 340px; margin-inline: auto; }
+  .palette { max-width: 372px; margin-inline: auto; }
   .dot {
-    width: 40px; height: 40px;
+    width: 44px; height: 44px;
     border-radius: 50%;
     background: var(--c);
     border: 3px solid rgba(255, 255, 255, 0.75);
@@ -251,7 +292,40 @@
     margin-top: 18px;
   }
   .made { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; }
+
+  /* sideways: every row loses a few pixels so the whole workbench — creature,
+     shape, colours, size, name — is one screen rather than a scroll */
+  @media (max-height: 460px) {
+    .stage { padding: 0 0 6px; }
+    .row { margin-bottom: 6px; gap: 6px; }
+    .parts { gap: 9px; }
+    .part { width: 46px; height: 46px; border-width: 2px; }
+    .swatch { width: 26px; height: 26px; }
+    .dot { border-width: 2px; }
+    /* wide enough for all twelve colours in one row, which buys back a whole
+       row of height */
+    .palette { max-width: 640px; }
+    .name { padding: 7px 14px; }
+  }
   .made strong { font-size: 15px; }
   .tile { background: none; border: none; cursor: pointer; padding: 0; }
-  .bin { background: none; border: none; font-size: 16px; opacity: 0.55; cursor: pointer; }
+  /* a real target, not a 16px glyph next to the picture she wants to tap */
+  .bin {
+    min-width: 44px;
+    min-height: 44px;
+    background: none;
+    border: none;
+    border-radius: 14px;
+    font-size: 17px;
+    opacity: 0.5;
+    cursor: pointer;
+    transition: background 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+  }
+  .bin.armed {
+    opacity: 1;
+    background: rgba(255, 90, 80, 0.22);
+    transform: scale(1.12);
+    animation: wobble 0.5s ease-in-out infinite;
+  }
+  @keyframes wobble { 25% { transform: scale(1.12) rotate(-7deg); } 75% { transform: scale(1.12) rotate(7deg); } }
 </style>

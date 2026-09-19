@@ -39,8 +39,7 @@
   let food = $state<FoodKind>('pellet');
   /** The reins only exist while she is actually riding something. */
   let riding = $state(false);
-  /** On a phone the six foods collapse to the one she is holding. */
-  let compact = $state(false);
+  /** The six foods collapse to the one she is holding until she asks. */
   let menuOpen = $state(true);
 
   /* the tilt game */
@@ -58,7 +57,6 @@
     const ticker = setInterval(() => (line = (line + 1) % TICKER.length), 9000);
     const hint = setTimeout(() => (hintVisible = false), 14000);
     canTilt = tiltSupported();
-    compact = window.matchMedia('(max-width: 560px)').matches;
     menuOpen = false;
     // a creature id in the query string means "show me this one" from the gallery
     const want = $page.url.searchParams.get('find');
@@ -138,7 +136,7 @@
 {/if}
 
 <div class="hud">
-  <div class="top" style="padding-top: calc(10px + env(safe-area-inset-top))">
+  <div class="top">
     <div class="chip small counter">
       🐟 <span class="word">{t('fed', $settings.lang)}:</span> {$progress.fed}
     </div>
@@ -211,11 +209,12 @@
 
 <style>
   .hud { position: fixed; inset: 0; pointer-events: none; z-index: 30; }
+  /* the notch is on one side in landscape, so both sides keep clear of it */
   .top {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 12px;
+    padding: calc(10px + var(--edge-top)) calc(12px + var(--edge-right)) 0 calc(12px + var(--edge-left));
   }
   .top :global(.chip) { pointer-events: auto; }
   .spacer { flex: 1; }
@@ -224,7 +223,7 @@
   .story {
     position: absolute;
     left: 50%;
-    top: calc(74px + env(safe-area-inset-top));
+    top: calc(74px + var(--edge-top));
     transform: translateX(-50%);
     width: min(640px, calc(100vw - 32px));
     margin: 0;
@@ -243,7 +242,7 @@
   .hint {
     position: absolute;
     left: 50%;
-    top: calc(108px + env(safe-area-inset-top));
+    top: calc(108px + var(--edge-top));
     transform: translateX(-50%);
     margin: 0;
     max-width: min(420px, calc(100vw - 24px));
@@ -255,7 +254,9 @@
     -webkit-backdrop-filter: blur(6px);
     font-size: 14px;
     font-weight: 700;
-    white-space: nowrap;
+    /* it wraps rather than running out of its own pill: the German quest line
+       is wider than a phone long before the pill's 420px cap bites */
+    text-align: center;
     animation: fadein 0.5s ease;
   }
 
@@ -263,8 +264,8 @@
      middle of the glass — where the reef and the chest are — stays clear. */
   .feeder {
     position: absolute;
-    right: 14px;
-    bottom: calc(16px + env(safe-area-inset-bottom));
+    right: calc(14px + var(--edge-right));
+    bottom: calc(16px + var(--edge-bottom));
     display: flex;
     flex-direction: column;
     /* pinned to the edge, not centred: otherwise opening the two-column picker
@@ -285,6 +286,9 @@
   .bite {
     font-size: 20px;
     line-height: 1;
+    /* square, not letterbox: a 37px-wide button is under the tap minimum even
+       though `.chip.small` already guarantees the height */
+    min-width: 44px;
     padding: 8px 9px;
     cursor: pointer;
     opacity: 0.72;
@@ -334,24 +338,34 @@
   @media (max-width: 560px) {
     /* the fish icon already says what is being counted */
     .counter .word { display: none; }
-    .top { gap: 6px; padding: 0 10px; }
+    /* these keep the --edge-* insets: a shorthand without them puts the row
+       back under the notch on the phones that have one */
+    .top { gap: 6px; padding: calc(10px + var(--edge-top)) calc(10px + var(--edge-right)) 0 calc(10px + var(--edge-left)); }
     /* flavour text she cannot read, lying across the middle of the tank */
     .story { display: none; }
     .shelf { display: none; }
   }
   @media (max-width: 430px) {
     .story { font-size: 14px; width: calc(100vw - 20px); }
-    .hint { font-size: 13px; padding: 7px 12px; max-width: calc(100vw - 24px); white-space: normal; text-align: center; }
+    .hint {
+      font-size: 13px;
+      padding: 6px 12px;
+      max-width: calc(100vw - 24px);
+      top: calc(64px + var(--edge-top));
+    }
     .bite { font-size: 19px; padding: 7px 8px; }
     .feed { width: 58px; height: 58px; font-size: 27px; }
-    .hint { font-size: 13px; padding: 6px 12px; top: calc(64px + env(safe-area-inset-top)); }
     .shelf { font-size: 13px; gap: 2px; }
-    .top { gap: 5px; padding: 0 8px; }
+    .top { gap: 5px; padding: calc(10px + var(--edge-top)) calc(8px + var(--edge-right)) 0 calc(8px + var(--edge-left)); }
   }
-  /* landscape on a phone: almost no height, so drop everything optional */
-  @media (max-height: 430px) {
-    .story { top: calc(60px + env(safe-area-inset-top)); font-size: 12px; }
-    .feed { width: 52px; height: 52px; font-size: 24px; }
-    .hint { display: none; }
+  /* landscape on a phone: almost no height, so the grown-up's line goes and
+     the quest — the only line that tells her what to do — stays */
+  @media (max-height: 460px) {
+    .story { display: none; }
+    .feed { width: 54px; height: 54px; font-size: 25px; }
+    .hint { top: calc(58px + var(--edge-top)); font-size: 12px; padding: 5px 11px; }
+    /* the food picker goes three wide instead of two, so it is short enough
+       to sit in the corner rather than reaching up into the doorways */
+    .menu { grid-template-columns: repeat(3, auto); }
   }
 </style>

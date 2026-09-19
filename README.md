@@ -8,6 +8,14 @@ Tap a fish and it says hello. Feed them — but not everyone likes the same food
 Find the hidden golden key and unlock the treasure chest. Swim off to eight
 other places. Build your own creature and watch it join the others.
 
+## 📲 Put it on the phone
+
+Open it, tap ⚙️, then **Aufs Handy holen**. On Android that is one button; on
+an iPhone it is Share → *Zum Home-Bildschirm*. Either way it lands on the home
+screen with its own icon, opens without a browser around it, and keeps working
+with no signal at all — the nine places, every animal and every game are on
+the device after the first visit.
+
 ---
 
 ## 🎨 Want to change something?
@@ -101,8 +109,9 @@ colour, it tells you which two.
 |---|---|
 | Stack | SvelteKit 2 · Svelte 5 · canvas · no runtime dependencies |
 | Output | static, served by Caddy |
+| Installable | yes — manifest, service worker, everything precached |
 | Hosting | Railway, behind Cloudflare |
-| Tests | ~100, headless, sub-second |
+| Tests | ~130, headless, sub-second |
 
 ```bash
 npm run dev     # dev server

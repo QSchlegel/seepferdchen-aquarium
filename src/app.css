@@ -11,6 +11,21 @@
   --radius: 20px;
   --tap: 56px;
   --font: "Baloo 2", "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", system-ui, sans-serif;
+
+  /**
+   * The unusable edges of a phone: the notch, the rounded corners, the home
+   * bar. Anything pinned to an edge measures from these rather than from 0 —
+   * iOS eats the first tap on anything sitting in the home bar, and in
+   * landscape the notch covers a finger's width of one side.
+   *
+   * They are all zero on a desktop and on anything without cutouts, so the
+   * same rule works everywhere. `viewport-fit=cover` in app.html is what makes
+   * the browser report them at all.
+   */
+  --edge-top: env(safe-area-inset-top, 0px);
+  --edge-bottom: env(safe-area-inset-bottom, 0px);
+  --edge-left: env(safe-area-inset-left, 0px);
+  --edge-right: env(safe-area-inset-right, 0px);
 }
 
 * { box-sizing: border-box; }
@@ -26,10 +41,32 @@ html, body {
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  /* long-pressing the tank blows bubbles; iOS would rather offer a share sheet */
+  -webkit-touch-callout: none;
+  /* iOS inflates text when a phone is turned sideways, which breaks every row */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   overscroll-behavior: none;
 }
 
 button, a { font-family: inherit; }
+
+/**
+ * No double-tap-to-zoom, anywhere.
+ *
+ * She taps the same fish four times in a row to make it somersault, which iOS
+ * reads as "zoom in". A zoomed page has no visible way back, and she cannot
+ * read one. `manipulation` keeps scrolling and pinch, drops the double tap —
+ * and with it the 300ms wait before a tap counts.
+ */
+button, a, .page, .card { touch-action: manipulation; }
+
+/* ...but a text field still has to allow a caret and a selection: on iOS the
+   `user-select: none` above otherwise makes the name box impossible to edit. */
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
 
 /* A pill button, big enough for a five-year-old to hit. */
 .chip {
@@ -62,7 +99,13 @@ button, a { font-family: inherit; }
   inset: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: calc(16px + env(safe-area-inset-top)) 16px calc(110px + env(safe-area-inset-bottom));
+  /* nothing chains out to the browser's own pull-to-refresh */
+  overscroll-behavior: contain;
+  padding:
+    calc(16px + var(--edge-top))
+    calc(16px + var(--edge-right))
+    calc(110px + var(--edge-bottom))
+    calc(16px + var(--edge-left));
 }
 
 h1 { font-size: 26px; margin: 4px 0 16px; text-shadow: 0 2px 8px rgba(0, 40, 65, 0.5); }
@@ -79,4 +122,12 @@ h2 { font-size: 19px; margin: 22px 0 10px; opacity: 0.92; }
 @media (max-width: 430px) {
   h1 { font-size: 22px; }
   .chip { font-size: 16px; padding: 12px 16px; }
+}
+
+/* A phone held sideways has about 390px of height to spend. Headings are for
+   the grown-up; the thing she came for gets the room. */
+@media (max-height: 460px) {
+  h1 { font-size: 19px; margin: 0 0 8px; }
+  h2 { font-size: 16px; margin: 14px 0 7px; }
+  .page { padding-top: calc(10px + var(--edge-top)); }
 }
