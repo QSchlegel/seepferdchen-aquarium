@@ -231,7 +231,8 @@
     font-size: 16px;
     font-weight: 700;
     line-height: 1.35;
-    text-shadow: 0 2px 8px rgba(0, 45, 70, 0.8), 0 0 3px rgba(0, 45, 70, 0.6);
+    color: var(--chip-ink);
+    text-shadow: var(--story-shadow, 0 2px 8px rgba(0, 45, 70, 0.8), 0 0 3px rgba(0, 45, 70, 0.6));
     animation: fadein 0.8s ease;
   }
   @keyframes fadein { from { opacity: 0; transform: translate(-50%, 8px); } }
@@ -248,8 +249,10 @@
     max-width: min(420px, calc(100vw - 24px));
     padding: 7px 15px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.22);
-    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: var(--chip);
+    border: 2px solid var(--chip-line);
+    color: var(--chip-ink);
+    text-shadow: var(--chip-shadow);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     font-size: 14px;
@@ -298,8 +301,8 @@
   .feed {
     width: 64px; height: 64px;
     border-radius: 22px;
-    border: 2px solid rgba(255, 255, 255, 0.55);
-    background: rgba(255, 255, 255, 0.26);
+    border: 2px solid var(--chip-line);
+    background: var(--chip);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     font-size: 30px;
@@ -307,7 +310,7 @@
     box-shadow: 0 8px 22px rgba(0, 40, 65, 0.3);
     transition: transform 0.13s ease, background 0.2s ease;
   }
-  .feed:hover { background: rgba(255, 255, 255, 0.38); }
+  .feed:hover { background: var(--chip-press); }
   .feed:active { transform: scale(0.92); }
 
   .shelf { display: flex; gap: 3px; font-size: 15px; line-height: 1; }
@@ -315,12 +318,12 @@
   .shelf span.got { opacity: 1; filter: none; }
 
   .top :global(.chip.on) {
-    background: rgba(255, 209, 102, 0.75);
+    background: var(--chip-lit);
     border-color: #fff;
   }
 
   .quest {
-    background: rgba(255, 214, 110, 0.24);
+    background: var(--chip-lit);
     border-color: rgba(255, 226, 150, 0.7);
     animation: fadein 0.5s ease;
   }

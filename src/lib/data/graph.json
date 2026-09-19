@@ -11,7 +11,7 @@
       "id": "src/lib/art/index.ts",
       "label": "index",
       "layer": "art",
-      "loc": 3340,
+      "loc": 3353,
       "fanIn": 5
     },
     {
@@ -32,14 +32,14 @@
       "id": "src/lib/components/Joystick.svelte",
       "label": "Joystick",
       "layer": "component",
-      "loc": 197,
+      "loc": 199,
       "fanIn": 1
     },
     {
       "id": "src/lib/components/Maze.svelte",
       "label": "Maze",
       "layer": "component",
-      "loc": 223,
+      "loc": 233,
       "fanIn": 1
     },
     {
@@ -53,7 +53,7 @@
       "id": "src/lib/components/Nav.svelte",
       "label": "Nav",
       "layer": "component",
-      "loc": 191,
+      "loc": 192,
       "fanIn": 1
     },
     {
@@ -67,7 +67,7 @@
       "id": "src/lib/components/Tank.svelte",
       "label": "Tank",
       "layer": "component",
-      "loc": 305,
+      "loc": 318,
       "fanIn": 2
     },
     {
@@ -88,8 +88,8 @@
       "id": "src/lib/data/scenes.ts",
       "label": "scenes",
       "layer": "data",
-      "loc": 229,
-      "fanIn": 4
+      "loc": 271,
+      "fanIn": 6
     },
     {
       "id": "src/lib/data/site.ts",
@@ -116,7 +116,7 @@
       "id": "src/lib/sim/behaviour.ts",
       "label": "behaviour",
       "layer": "sim",
-      "loc": 355,
+      "loc": 427,
       "fanIn": 1
     },
     {
@@ -137,7 +137,7 @@
       "id": "src/lib/sim/world.ts",
       "label": "world",
       "layer": "sim",
-      "loc": 1504,
+      "loc": 1557,
       "fanIn": 3
     },
     {
@@ -200,7 +200,7 @@
       "id": "src/routes/+page.svelte",
       "label": "/",
       "layer": "route",
-      "loc": 372,
+      "loc": 375,
       "fanIn": 0
     },
     {
@@ -311,6 +311,10 @@
     },
     {
       "source": "src/lib/components/Maze.svelte",
+      "target": "src/lib/data/scenes.ts"
+    },
+    {
+      "source": "src/lib/components/Maze.svelte",
       "target": "src/lib/sim/maze.ts"
     },
     {
@@ -372,6 +376,10 @@
     {
       "source": "src/lib/components/Tank.svelte",
       "target": "src/lib/art/index.ts"
+    },
+    {
+      "source": "src/lib/components/Tank.svelte",
+      "target": "src/lib/data/scenes.ts"
     },
     {
       "source": "src/lib/components/Tank.svelte",

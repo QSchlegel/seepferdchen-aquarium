@@ -57,6 +57,20 @@ Learn these rather than rediscovering them:
   creature maker: the portrait's bounding box was computed once, so every later
   body was drawn with the first one's fit. A media query read once at mount has
   the same problem when the tablet is turned over — use `stores/viewport.ts`.
+- **The sea is wider than the window, and it loops.** Positions are world
+  coordinates; correct them with `wrapWorld`, never by clamping to
+  `this.width`. Food was clamped, so everything she dropped while riding was
+  yanked back to the origin.
+- **A constant that trades the screen off against the world must be tried at
+  phone size.** `art.sx()` split the loop at `worldWidth - tankWidth - 700`,
+  which on a phone is 80px — inside the glass — so the renderer culled all but
+  a corner of the tank. Every test of it used a 900px screen. See
+  [The Tank](vault/The%20Tank.md); the cast also drifts back towards whatever
+  the camera is looking at, which is the other half of a full tank.
+- **The floating controls are not always white.** They sit over water that is
+  repainted nine ways; white glass vanishes over the pale places. Take their
+  colours from the `--chip-*` tokens in `app.css`, which follow `chromeInk()`
+  for the place she is in.
 - **A phone eats taps at the edges of the screen.** Anything pinned to an edge
   measures from `--edge-top`/`-bottom`/`-left`/`-right` in `app.css`, never
   from 0. The menu button sat in the home bar and needed two taps, every time.

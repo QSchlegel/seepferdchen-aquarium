@@ -3,9 +3,10 @@
    * The aquarium canvas. Owns the render loop and forwards taps to the World;
    * everything else about the simulation lives in $lib/sim.
    */
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { World, type HuntStage, type KeyEffect } from '$lib/sim/world';
   import { setScene } from '$lib/art';
+  import { chromeInk } from '$lib/data/scenes';
   import { CAST } from '$lib/data/cast';
   import { mine, toSpec } from '$lib/stores/mine';
   import { settings } from '$lib/stores/settings';
@@ -172,6 +173,18 @@
       setScene($settings.scene);
       world.resize(world.width, world.height);
     }
+  });
+
+  /**
+   * The floating buttons are white glass, which is invisible over the pale
+   * places — see `chromeInk`. Only the screens that paint the sea set this;
+   * everywhere else the background is the app's own blue and white is right.
+   */
+  $effect(() => {
+    document.documentElement.dataset.chrome = chromeInk($settings.scene);
+  });
+  onDestroy(() => {
+    if (typeof document !== 'undefined') delete document.documentElement.dataset.chrome;
   });
 
   /* ------------------------------------------------------------ gestures */

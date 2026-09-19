@@ -399,12 +399,26 @@ export class World {
     const golden = 0.618033988749895;
     const fx = (index * golden) % 1;
     const fy = ((index * golden * 3) % 1);
+    /**
+     * Spread over about a screen and a half, centred on the glass, rather
+     * than over the whole sea. She opens the app and there are animals in
+     * front of her; the rest of the sea fills up within the minute as the
+     * cast wanders, and empties again behind her as it wanders back.
+     */
+    // A starfish never moves and a crab walks at a few pixels a second, so
+    // those two are put on the glass rather than near it — placed out in the
+    // sea they would simply never be seen.
+    const rooted = mode === 'static' || mode === 'crawl';
+    const spread = rooted
+      ? this.width * 0.86
+      : Math.min(this.worldWidth || this.width, this.width * 1.5);
+    const home = art.wrapWorld(this.camera + this.width / 2 - spread / 2);
     return {
       ...spec,
       baseSize: spec.size,
       size: spec.size * scale,
       mode,
-      x: (this.worldWidth || this.width) * fx,
+      x: art.wrapWorld(home + spread * fx),
       y: this.height * (0.1 + fy * 0.68),
       // spread the cast through the depth of the tank, not onto one pane
       z: art.rnd(-0.85, 0.85),
@@ -944,9 +958,41 @@ export class World {
   }
 
   /** Make a creature announce itself — used by the gallery and the find game. */
+  /**
+   * "Show me this one", from the gallery.
+   *
+   * It used to sparkle wherever the creature happened to be — which, in a sea
+   * three screens wide, was usually somewhere she could not see. Nothing
+   * happened, and there was no way for her to know why.
+   *
+   * One that is off the glass is now brought onto it, just inside the edge it
+   * was already nearest, and swims on into the middle. Brought rather than
+   * called: a long swim in looks better but it is at the mercy of whatever
+   * else is going on out there — the first version was chased straight back
+   * out again by the shark — and "show me" has to actually show her.
+   */
   highlight(id: string) {
     const c = this.creatures.find((o) => o.id === id);
     if (!c) return null;
+
+    const middle = art.wrapWorld(this.camera + this.width / 2);
+    const away = art.wrapDelta(middle, c.x);
+    if (Math.abs(away) > this.width * 0.42) {
+      const side = away > 0 ? 1 : -1;
+      c.x = art.wrapWorld(middle + side * this.width * 0.38);
+      c.y = art.clamp(this.height * 0.42, 40, art.sandY(c.x) - c.size);
+      c.vx = -side * (c.speed ?? 50);
+      // heading for the middle, wide awake, and not still running from
+      // whatever it was doing on the other side of the sea
+      c.tx = art.wrapWorld(middle + art.rnd(-this.width * 0.12, this.width * 0.12));
+      c.ty = art.clamp(this.height * 0.45, 40, art.sandY(c.tx) - c.size - 20);
+      c.retarget = 5;
+      c.energy = 1;
+      c.flee = 0;
+      this.burst(c.x, c.y);
+      this.glitter(c.x, c.y, 10, c.size);
+    }
+
     c.wiggle = 1.4;
     c.label = 3.4;
     this.burst(c.x, c.y - c.size * 0.4);
@@ -978,7 +1024,9 @@ export class World {
         s.retarget -= dt;
         if (s.retarget <= 0) {
           s.retarget = art.rnd(2.5, 5);
-          s.tx = art.rnd(this.width * 0.1, this.width * 0.9);
+          // measured from the camera, not from zero: a shoal that wandered by
+          // the origin stayed there while she rode off into the open sea
+          s.tx = art.wrapWorld(this.camera + art.rnd(this.width * 0.1, this.width * 0.9));
           s.ty = art.rnd(this.height * 0.15, art.sandY(s.tx) - 60);
         }
       }
@@ -994,6 +1042,8 @@ export class World {
 
     const ctx: Context = {
       width: this.width, height: this.height, time: t, dt,
+      // where the glass is, so the cast can drift back to it
+      view: this.camera,
       foods: this.foods,
       shoals: this.shoalState,
       all: this.creatures,
@@ -1055,7 +1105,10 @@ export class World {
       f.vx *= 1 - Math.min(1, dt * 1.4);
       f.rot += p.spin * dt * (f.vy / p.sink);
       f.life -= dt;
-      f.x = art.clamp(f.x, 6, this.width - 6);
+      // the sea loops and has no side walls; this used to clamp food to the
+      // first screen, so a pellet dropped anywhere else — every pellet she
+      // drops while riding — was yanked back to the origin and left to rot
+      f.x = art.wrapWorld(f.x);
       const floor = art.sandY(f.x) + 4;
       if (f.y > floor) { f.y = floor; f.vy = 0; }
       if (f.life <= 0) this.foods.splice(i, 1);

@@ -15,6 +15,23 @@ light, vegetation densities, terrain seed and inhabitants.
 | Eismeer | pale, icy, high-key |
 | Perlenbank | soft pinks, coral-rich |
 
+## The buttons change colour with the water
+
+The floating controls — the menu button, the feed button, the counters, the
+quest line — are frosted glass. White glass with white icons reads beautifully
+over the trench and the cave, and is *invisible* over the pearl beds, the ice
+sea and the lagoon, where the water at the surface is almost white. Measured as
+a contrast ratio, white on the pearl beds is 1.1, which is none at all; six of
+the nine places were like that, and the reef only got away with it because of
+the border round each pill.
+
+`chromeInk(place)` weighs white against the ink the cards are written in,
+against that place's surface water and its sand, and the tank sets
+`data-chrome` on `<html>` to whichever wins. The pale six get dark ink on
+light glass, the dark three keep white on dark. A test in `scenes.test.ts`
+holds every place to a contrast ratio of at least 3:1, so repainting a place —
+or adding a tenth — cannot quietly hide the controls again.
+
 ## How they connect
 
 Each scene lists `links`. The graph is **symmetric** — if you can swim there you

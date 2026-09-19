@@ -6,8 +6,23 @@
   --sand: #efd9a0;
   --ink: #10394f;
   --card: rgba(255, 255, 255, 0.9);
+
+  /**
+   * The floating controls: frosted glass over whatever water is behind them.
+   *
+   * White glass with white icons works over the deep places and vanishes over
+   * the pale ones — the pearl beds and the ice sea are nearly white at the
+   * surface, and the buttons simply were not there. Each place says which ink
+   * wins against its own water (`chromeInk` in data/scenes.ts) and the tank
+   * sets `data-chrome` on <html> to match.
+   */
   --chip: rgba(255, 255, 255, 0.28);
   --chip-line: rgba(255, 255, 255, 0.62);
+  --chip-ink: #fff;
+  --chip-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --chip-press: rgba(255, 255, 255, 0.48);
+  --chip-lit: rgba(255, 214, 110, 0.55);
+
   --radius: 20px;
   --tap: 56px;
   --font: "Baloo 2", "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", system-ui, sans-serif;
@@ -26,6 +41,17 @@
   --edge-bottom: env(safe-area-inset-bottom, 0px);
   --edge-left: env(safe-area-inset-left, 0px);
   --edge-right: env(safe-area-inset-right, 0px);
+}
+
+/* over pale water the same glass goes the other way up: a light pill with
+   dark ink, which is legible on anything lighter than the deep sea */
+:root[data-chrome="dark"] {
+  --chip: rgba(255, 255, 255, 0.66);
+  --chip-line: rgba(12, 60, 88, 0.22);
+  --chip-ink: var(--ink);
+  --chip-shadow: none;
+  --chip-press: rgba(255, 255, 255, 0.92);
+  --chip-lit: rgba(255, 190, 60, 0.9);
 }
 
 * { box-sizing: border-box; }
@@ -81,17 +107,17 @@ input, textarea {
   background: var(--chip);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  color: #fff;
+  color: var(--chip-ink);
   font-size: 18px;
   font-weight: 700;
   text-decoration: none;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  text-shadow: var(--chip-shadow);
   cursor: pointer;
   touch-action: manipulation;
   transition: transform 0.12s ease, background 0.2s ease;
 }
-.chip:active { transform: scale(0.94); background: rgba(255, 255, 255, 0.48); }
-.chip.on { background: rgba(255, 214, 110, 0.55); }
+.chip:active { transform: scale(0.94); background: var(--chip-press); }
+.chip.on { background: var(--chip-lit); }
 .chip.small { min-height: 44px; padding: 9px 15px; font-size: 15px; }
 
 .page {

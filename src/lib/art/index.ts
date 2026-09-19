@@ -67,10 +67,23 @@ export function wrapDelta(a: number, b: number) {
 export function sx(worldX: number) {
   const w = worldWidth();
   let d = ((worldX - CAM) % w + w) % w;
-  // Anything further round the loop than a screen plus a wide margin belongs
-  // to the left of the camera instead. The margin has to exceed the widest
-  // thing drawn (the wreck) or it pops as it crosses the seam.
-  if (d > w - W - 700) d -= w;
+  /**
+   * Which side of the camera does this belong on? Everything past the split
+   * is really behind her, and is drawn at a negative x so the caller culls it.
+   *
+   * The split has to sit a good way past the right edge — further than half
+   * the widest thing drawn, or a shipwreck appears in two halves at once —
+   * and a good way before the seam, for the same reason.
+   *
+   * It used to be `w - W - 700`, which is those two constraints written down
+   * for a desktop and nowhere else. On a phone the sea is three *narrow*
+   * screens, so that came to 80px: everything past the first eighty pixels of
+   * the glass was shoved a whole loop to the left and culled before it was
+   * drawn. The animals were all there, in front of her, and she could see six
+   * of them. It is the reason the tank looked empty on a phone.
+   */
+  const split = Math.min(W + 700, (w + W) / 2);
+  if (d > split) d -= w;
   return d;
 }
 
