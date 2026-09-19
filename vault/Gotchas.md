@@ -74,6 +74,23 @@ the second finger took the first one's place, so only the last one stirred the
 water, lifting either one stopped the other's bubbles, and a tap anywhere
 cancelled a journey somebody was holding a doorway open for.
 
+## The service worker caches three lists, not two
+
+`$service-worker` exports `build`, `files` **and** `prerendered`. The first two
+are the scripts and the contents of `static/`; the third is the nine pages
+themselves.
+
+> Only the first two were cached. Every asset the app needs was on the device
+> and the HTML that loads them was not, so offline she got the browser's
+> dinosaur on any page she had not already opened on that device. The offline
+> story looked finished and was not.
+
+`src/test/pwa.test.ts` fails if `prerendered` goes missing again. Test it for
+real with `npm run build`, serve `build/`, load a page, then stop the server —
+Chrome's "offline" checkbox is not the same thing: under it `fetch()` inside a
+worker resolves with a synthetic 404 instead of rejecting, so the fallback
+path never runs.
+
 ## Terrain collision
 
 Correcting only downwards leaves a swimmer pressed into a steep outcrop with

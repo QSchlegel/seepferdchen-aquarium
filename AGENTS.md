@@ -26,7 +26,7 @@ rendering, no runtime dependencies.
 | Command | Purpose |
 |---|---|
 | `npm run dev` | dev server |
-| `npm test` | ~100 headless tests |
+| `npm test` | ~130 headless tests |
 | `npm run check` | svelte-check, must report 0 errors |
 | `npm run build` | regenerates the module graph, then builds |
 | `npm run graph` | regenerate the module graph only |

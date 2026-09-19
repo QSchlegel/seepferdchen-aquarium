@@ -58,8 +58,10 @@ Start here if you have never touched the code.
 - [ ] **Improve the spoken voice** `#code`
   Rate, pitch and voice selection in `speech.ts`; a toggle separate from sound.
 - [ ] **Refresh the share image and the app icon** `#art`
-- [ ] **Finish the PWA** `#code`
-  Manifest and service worker exist. Audit installability properly.
+- [x] **Finish the PWA** `#code`
+  Installable, with an offer in the settings sheet (Chrome prompts, iOS gets
+  told where the Share button is), screenshots in the manifest so the install
+  dialog shows what it is, and `src/test/pwa.test.ts` to keep it that way.
 - [ ] **A deeper maker** `#design` `#code`
   Patterns, fin shapes, eye styles, accessories.
 - [ ] **The maker as two columns on a sideways phone** `#design`
@@ -76,7 +78,11 @@ Start here if you have never touched the code.
   before starting.
 - [ ] **Record her own voice for the names** `#design`
 - [ ] **A drawing tool so she can draw a creature freehand** `#art` `#code`
-- [ ] **Make the whole thing work offline on a plane** `#code`
+- [x] **Make the whole thing work offline on a plane** `#code`
+  Every page, script and picture is precached on first visit; verified by
+  loading the app, killing the server and walking the nine places. What is
+  *not* covered: the spoken names use whichever voices the device has, and a
+  device that has never opened the app has nothing to cache from.
 
 ## Known rough edges
 

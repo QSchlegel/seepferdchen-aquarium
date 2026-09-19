@@ -1,5 +1,9 @@
 <script lang="ts">
   import '../app.css';
+  // side-effect import: the browser fires `beforeinstallprompt` early and only
+  // once, so the listener has to be in place on every page, not just the one
+  // with the settings sheet that offers the button
+  import '$lib/install';
   import Nav from '$lib/components/Nav.svelte';
   import { settings } from '$lib/stores/settings';
   import { startMusic, stopMusic } from '$lib/audio';

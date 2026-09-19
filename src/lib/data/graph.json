@@ -60,7 +60,7 @@
       "id": "src/lib/components/SettingsSheet.svelte",
       "label": "SettingsSheet",
       "layer": "component",
-      "loc": 106,
+      "loc": 174,
       "fanIn": 1
     },
     {
@@ -81,7 +81,7 @@
       "id": "src/lib/data/i18n.ts",
       "label": "i18n",
       "layer": "data",
-      "loc": 81,
+      "loc": 86,
       "fanIn": 10
     },
     {
@@ -103,6 +103,13 @@
       "label": "story",
       "layer": "data",
       "loc": 39,
+      "fanIn": 2
+    },
+    {
+      "id": "src/lib/install.ts",
+      "label": "install",
+      "layer": "lib",
+      "loc": 125,
       "fanIn": 2
     },
     {
@@ -179,7 +186,7 @@
       "id": "src/routes/+layout.svelte",
       "label": "/",
       "layer": "route",
-      "loc": 31,
+      "loc": 35,
       "fanIn": 0
     },
     {
@@ -263,7 +270,7 @@
       "id": "src/service-worker.ts",
       "label": "service-worker",
       "layer": "lib",
-      "loc": 40,
+      "loc": 84,
       "fanIn": 0
     },
     {
@@ -355,6 +362,10 @@
       "target": "src/lib/speech.ts"
     },
     {
+      "source": "src/lib/components/SettingsSheet.svelte",
+      "target": "src/lib/install.ts"
+    },
+    {
       "source": "src/lib/components/Tank.svelte",
       "target": "src/lib/sim/world.ts"
     },
@@ -433,6 +444,10 @@
     {
       "source": "src/lib/stores/settings.ts",
       "target": "src/lib/data/scenes.ts"
+    },
+    {
+      "source": "src/routes/+layout.svelte",
+      "target": "src/lib/install.ts"
     },
     {
       "source": "src/routes/+layout.svelte",
