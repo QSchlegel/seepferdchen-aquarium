@@ -11,7 +11,7 @@
       "id": "src/lib/art/index.ts",
       "label": "index",
       "layer": "art",
-      "loc": 3340,
+      "loc": 3353,
       "fanIn": 5
     },
     {
@@ -116,7 +116,7 @@
       "id": "src/lib/sim/behaviour.ts",
       "label": "behaviour",
       "layer": "sim",
-      "loc": 355,
+      "loc": 427,
       "fanIn": 1
     },
     {
@@ -137,7 +137,7 @@
       "id": "src/lib/sim/world.ts",
       "label": "world",
       "layer": "sim",
-      "loc": 1504,
+      "loc": 1557,
       "fanIn": 3
     },
     {

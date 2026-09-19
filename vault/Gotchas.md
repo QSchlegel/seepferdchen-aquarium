@@ -91,6 +91,39 @@ Chrome's "offline" checkbox is not the same thing: under it `fetch()` inside a
 worker resolves with a synthetic 404 instead of rejecting, so the fallback
 path never runs.
 
+## Anything sized against the glass has to be tried on a phone
+
+`art.sx()` split the loop at `worldWidth - tankWidth - 700`. On a desktop that
+is a sensible margin. On a phone, where the sea is three 390px screens, it is
+80px — inside the glass — so everything past the first eighty pixels was drawn
+a whole loop to the left and culled.
+
+> She opened the aquarium on a phone and saw six animals huddled in the
+> left-hand corner of an empty tank. All fifty of them were there, in front of
+> her, and the renderer was throwing them away.
+
+Every test of that function used a 900px screen. Constants that trade one
+dimension off against another — a margin against a world width, a cast against
+a screen — need testing at the sizes the app is actually used at, which for
+this one is a phone held upright. `art/world.test.ts` now loops over 390, 844
+and 1280.
+
+## The sea loops, so nothing may be clamped to the first screen
+
+`world.ts` used to finish its food update with
+`f.x = clamp(f.x, 6, this.width - 6)` — a leftover from when the tank was one
+screen wide and had side walls.
+
+> Every pellet she dropped while riding was snatched back to the origin the
+> instant it landed, and sank there, a mile from the fish she meant to feed.
+> It never showed up at rest, because at rest the camera *is* the first
+> screen, which is why it survived so long.
+
+The sea is a loop: positions are world coordinates and the only legal
+correction is `wrapWorld`. The three things that are still deliberately
+clamped to the glass — the key, the pearl, the doorways — are clamped because
+she has to be able to reach them, and each says so.
+
 ## Terrain collision
 
 Correcting only downwards leaves a swimmer pressed into a steep outcrop with

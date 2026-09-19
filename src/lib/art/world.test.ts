@@ -4,10 +4,17 @@ import { SCENES, type SceneId } from '$lib/data/scenes';
 
 const SCREEN = 900;
 
-function place(id: SceneId) {
+/** The glass sizes the app actually runs at: phone upright, phone sideways, desktop. */
+const SCREENS: [string, number, number][] = [
+  ['a phone upright', 390, 844],
+  ['a phone sideways', 844, 390],
+  ['a desktop', 1280, 720]
+];
+
+function place(id: SceneId, screen = SCREEN, height = 700) {
   setScene(id);
-  setTank(SCREEN, 700);
-  setWorld(SCREEN * SCENES[id].span);
+  setTank(screen, height);
+  setWorld(screen * SCENES[id].span);
 }
 
 describe('the looping world', () => {
@@ -101,6 +108,46 @@ describe('things stay where they are when the camera moves', () => {
         expect(Math.abs(p - prev), `jumped at camera ${cam}`).toBeLessThan(20);
       }
       prev = p;
+    }
+  });
+
+  /**
+   * The one that was missed: every test above runs at 900px, and the bug only
+   * bites when the sea is narrow enough that the split point lands inside the
+   * glass. On a phone it did, and everything past the first eighty pixels was
+   * drawn a whole loop to the left — that is to say, not drawn at all.
+   */
+  it('draws what is on the glass on the glass, at every size the app runs at', () => {
+    for (const [what, screen, height] of SCREENS) {
+      for (const id of Object.keys(SCENES) as SceneId[]) {
+        place(id, screen, height);
+        const w = worldWidth();
+        for (const cam of [0, 137, w / 3, w - 20]) {
+          setCamera(cam);
+          for (let x = 0; x <= screen; x += screen / 24) {
+            const at = sx(wrapWorld(cam + x));
+            expect(at, `${what} in the ${id}: world ${Math.round(cam + x)} drew at ${Math.round(at)}, not ${Math.round(x)}`)
+              .toBeCloseTo(x, 3);
+          }
+        }
+      }
+    }
+  });
+
+  it('keeps the seam away from both edges, at every size', () => {
+    for (const [what, screen, height] of SCREENS) {
+      place('riff', screen, height);
+      const w = worldWidth();
+      setCamera(0);
+      // walk right round the loop and find where it flips to the other side
+      let split = w;
+      for (let x = 0; x < w; x += 2) if (sx(x) < 0) { split = x; break; }
+      // far enough past the right edge that a wide fixture has left it...
+      expect(split - screen, `${what}: seam only ${Math.round(split - screen)}px past the edge`)
+        .toBeGreaterThan(Math.min(340, (w - screen) / 2 - 1));
+      // ...and far enough before the seam that it has not arrived on the left
+      expect(w - split, `${what}: seam only ${Math.round(w - split)}px before the wrap`)
+        .toBeGreaterThan(Math.min(340, (w - screen) / 2 - 1));
     }
   });
 

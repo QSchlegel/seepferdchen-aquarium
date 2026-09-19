@@ -4,11 +4,17 @@
  */
 
 import type { Creature, Food, FoodKind } from './types';
-import { sandY, clamp, rnd, wrapWorld, wrapDelta } from '$lib/art';
+import { sandY, clamp, rnd, wrapWorld, wrapDelta, worldWidth } from '$lib/art';
 
 export interface Context {
   width: number;
   height: number;
+  /**
+   * World x of the left edge of the glass — the camera. The sea is several
+   * screens wide and she is looking at one of them; creatures need to know
+   * which one, or they spend their lives somewhere she cannot see them.
+   */
+  view: number;
   time: number;
   dt: number;
   foods: Food[];
@@ -167,6 +173,51 @@ function flock(c: Creature, ctx: Context) {
   };
 }
 
+/**
+ * How far outside the glass a creature is, measured in screens. 0 means it is
+ * somewhere she can see; 1 means a whole screen past the edge.
+ */
+function outOfSight(x: number, ctx: Context): number {
+  const middle = wrapWorld(ctx.view + ctx.width / 2);
+  const away = Math.abs(wrapDelta(middle, x));
+  return Math.max(0, away - ctx.width / 2) / ctx.width;
+}
+
+/**
+ * How far to lean a creature's next wander back towards the glass.
+ *
+ * The sea is three to five screens wide and the glass shows one of them. Left
+ * to a plain random walk the cast spreads out evenly over all of it, so two
+ * thirds of the animals are always somewhere she is not looking. On a desktop
+ * that still leaves a busy tank; on a phone, where the glass is the narrowest
+ * it ever gets and the cast is thinned to begin with, it is thin.
+ *
+ * (The *other* reason a phone looked empty was `art.sx()` culling most of the
+ * tank before it was drawn — see [[The Tank]]. That was the bigger half of
+ * it. This is the half that is about where the animals actually are.)
+ *
+ * So there is a tide. It is zero while a creature is on screen — inside the
+ * glass everyone wanders as they always did — and it strengthens the further
+ * out of sight one drifts, until at a screen away it is heading home. Nothing
+ * is forbidden and nothing is teleported: they still swim off whenever they
+ * like, they just come back, the way fish in a tank keep returning to the
+ * front glass. While she is riding, the glass travels with her and so does
+ * the tide, so the cast follows her out into the open sea.
+ */
+function tide(c: Creature, ctx: Context): number | null {
+  // hide and seek forces the sea to one screen: there is no "away" to come
+  // back from, and a tide would only bunch everyone in the middle
+  if (worldWidth() <= ctx.width * 1.2) return null;
+  const out = outOfSight(c.x, ctx);
+  if (out <= 0) return null;
+  // a bold creature comes straight over; a shy one takes its time
+  const pull = Math.min(1, 0.5 + out) * (0.75 + (c.bold ?? 0.5) * 0.5);
+  if (Math.random() > pull) return null;
+  // anywhere on the glass, not the middle of it: pulling them all to the
+  // centre makes a huddle, and she should have animals across the whole width
+  return wrapWorld(ctx.view + rnd(ctx.width * 0.08, ctx.width * 0.92));
+}
+
 /** Keep a swimmer inside the glass and off the sand. */
 function bounds(c: Creature, ctx: Context) {
   const m = c.size * 1.1;
@@ -224,9 +275,17 @@ const MODES: Record<string, (c: Creature, ctx: Context) => void> = {
     } else {
       c.retarget -= ctx.dt;
       if (c.retarget <= 0 || c.tx === null) {
-        c.retarget = rnd(2.2, 5);
-        // somewhere within a screen or so, not across the whole sea
-        c.tx = wrapWorld(c.x + rnd(-ctx.width * 0.55, ctx.width * 0.55));
+        const home = tide(c, ctx);
+        if (home !== null) {
+          c.tx = home;
+          // long enough to actually arrive: re-rolling every two seconds left
+          // them dithering just off the edge, halfway home for ever
+          c.retarget = rnd(6, 10);
+        } else {
+          c.retarget = rnd(2.2, 5);
+          // somewhere within a screen or so, not across the whole sea
+          c.tx = wrapWorld(c.x + rnd(-ctx.width * 0.55, ctx.width * 0.55));
+        }
         c.ty = rnd(ctx.height * 0.1, sandY(c.tx) - 60);
         if (c.kind === 'shark') c.ty = rnd(ctx.height * 0.1, ctx.height * 0.55);
         // tired creatures drop down to potter about near the reef
@@ -287,14 +346,27 @@ const MODES: Record<string, (c: Creature, ctx: Context) => void> = {
   drift(c, ctx) {
     c.y -= (12 + Math.sin(ctx.time * 1.8 + c.phase) * 10) * ctx.dt;
     c.x += Math.sin(ctx.time * 0.55 + c.phase) * 0.55;
-    if (c.y < -c.size * 2) { c.y = sandY(c.x) - 10; c.x = wrapWorld(c.x + rnd(-300, 300)); }
+    // up through the water, then down to the sand to start again — and if the
+    // last few trips carried it off the glass, it comes up where she can see it
+    if (c.y < -c.size * 2) {
+      c.x = tide(c, ctx) ?? wrapWorld(c.x + rnd(-300, 300));
+      c.y = sandY(c.x) - 10;
+    }
     c.dir = 1;
   },
 
   crawl(c, ctx) {
     if (c.crawlDir === undefined) c.crawlDir = Math.random() < 0.5 ? -1 : 1;
     c.x = wrapWorld(c.x + c.crawlDir * c.speed * ctx.dt * (c.wiggle > 0 ? 2 : 1));
-    if (Math.random() < 0.004) c.crawlDir = (c.crawlDir * -1) as 1 | -1;
+    // a crab walks at a few pixels a second, so one that wanders off the glass
+    // is gone for the rest of the afternoon. Off the edge of sight it turns
+    // round and keeps going that way; only in view does it dither.
+    if (outOfSight(c.x, ctx) > 0.05) {
+      const back = wrapDelta(c.x, wrapWorld(ctx.view + ctx.width / 2));
+      c.crawlDir = (back > 0 ? 1 : -1) as 1 | -1;
+    } else if (Math.random() < 0.004) {
+      c.crawlDir = (c.crawlDir * -1) as 1 | -1;
+    }
     c.y = sandY(c.x) + 6 + Math.sin(ctx.time * 6 + c.phase) * 1.5;
     c.sway = Math.sin(ctx.time * 1.6 + c.phase) * 0.05;
     c.dir = c.crawlDir;
