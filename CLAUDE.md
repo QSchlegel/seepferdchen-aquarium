@@ -55,7 +55,12 @@ Learn these rather than rediscovering them:
   callback instead.
 - **Values computed in `onMount` do not follow prop changes.** This broke the
   creature maker: the portrait's bounding box was computed once, so every later
-  body was drawn with the first one's fit.
+  body was drawn with the first one's fit. A media query read once at mount has
+  the same problem when the tablet is turned over — use `stores/viewport.ts`.
+- **A phone eats taps at the edges of the screen.** Anything pinned to an edge
+  measures from `--edge-top`/`-bottom`/`-left`/`-right` in `app.css`, never
+  from 0. The menu button sat in the home bar and needed two taps, every time.
+  `src/test/edges.test.ts` fails the build if a new control forgets.
 
 ## Verifying
 
@@ -71,7 +76,8 @@ colour" or "run the sim for forty seconds and assert nobody is inside a rock" �
 those catch whole categories.
 
 Verify visually too when the change is visual. A screenshot of the built site
-beats reasoning about canvas coordinates.
+beats reasoning about canvas coordinates — and at 375×667 and 844×390, not
+just at desktop width. She plays on a phone, held either way up.
 
 ## Deploying
 

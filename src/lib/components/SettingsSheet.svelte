@@ -65,13 +65,19 @@
   }
   .sheet {
     position: fixed;
-    left: 50%; bottom: calc(90px + env(safe-area-inset-bottom));
+    left: 50%; bottom: calc(90px + var(--edge-bottom));
     transform: translateX(-50%);
     z-index: 51;
-    width: min(420px, calc(100vw - 24px));
+    width: min(420px, calc(100vw - 24px - var(--edge-left) - var(--edge-right)));
     display: flex;
     flex-direction: column;
     gap: 12px;
+    /* six rows is taller than a phone held sideways: scroll rather than
+       disappear off the top of the screen */
+    max-height: calc(100vh - 110px);
+    max-height: calc(100dvh - 110px - var(--edge-top) - var(--edge-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .row {
     display: flex;
@@ -85,4 +91,15 @@
   .sheet :global(.chip) { color: var(--ink); background: rgba(0, 60, 90, 0.1); border-color: rgba(0, 60, 90, 0.2); text-shadow: none; }
   .sheet :global(.chip.on) { background: rgba(255, 190, 60, 0.5); border-color: rgba(200, 130, 0, 0.5); }
   .sheet :global(.chip:disabled) { opacity: 0.4; cursor: not-allowed; }
+
+  @media (max-height: 460px) {
+    /* sideways there is no room above the menu button, so it sits in the
+       corner instead and takes the whole height it can get */
+    .sheet {
+      bottom: calc(10px + var(--edge-bottom));
+      gap: 8px;
+      max-height: calc(100dvh - 20px - var(--edge-top) - var(--edge-bottom));
+    }
+    .row { font-size: 14px; }
+  }
 </style>

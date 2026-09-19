@@ -72,8 +72,9 @@
 
   .opener {
       position: fixed;
-      left: 16px;
-      bottom: 16px;
+      /* clear of the notch and the home bar — see --edge-* in app.css */
+      left: calc(16px + var(--edge-left));
+      bottom: calc(16px + var(--edge-bottom));
       z-index: 45;
       width: 64px;
       height: 64px;
@@ -108,8 +109,8 @@
 
     .drawer {
       position: fixed;
-      left: 16px;
-      bottom: 92px;
+      left: calc(16px + var(--edge-left));
+      bottom: calc(92px + var(--edge-bottom));
       z-index: 46;
       display: grid;
       grid-template-columns: repeat(3, 116px);
@@ -147,12 +148,18 @@
 
   /* a phone gets a smaller drawer, still three across */
   @media (max-width: 560px) {
-    .opener { width: 56px; height: 56px; border-radius: 19px; left: 12px; bottom: 12px; }
-    .opener .icon { font-size: 26px; }
+    .opener {
+      width: 60px;
+      height: 60px;
+      border-radius: 20px;
+      left: calc(12px + var(--edge-left));
+      bottom: calc(12px + var(--edge-bottom));
+    }
+    .opener .icon { font-size: 27px; }
     .drawer {
-      left: 12px;
-      right: 12px;
-      bottom: 78px;
+      left: calc(12px + var(--edge-left));
+      right: calc(12px + var(--edge-right));
+      bottom: calc(82px + var(--edge-bottom));
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
       padding: 12px;
@@ -161,5 +168,23 @@
     .card { min-height: 78px; }
     .big { font-size: 29px; }
     .name { font-size: 11.5px; }
+  }
+
+  /* Sideways on a phone there is no room for three rows of cards above the
+     button — the top ones ended up off the screen. Five across, two rows. */
+  @media (max-height: 460px) {
+    .opener { width: 52px; height: 52px; border-radius: 17px; }
+    .opener .icon { font-size: 24px; }
+    .drawer {
+      left: calc(12px + var(--edge-left));
+      right: calc(12px + var(--edge-right));
+      bottom: calc(74px + var(--edge-bottom));
+      grid-template-columns: repeat(5, 1fr);
+      gap: 7px;
+      padding: 10px;
+    }
+    .card { min-height: 62px; gap: 3px; }
+    .big { font-size: 25px; }
+    .name { font-size: 11px; }
   }
 </style>

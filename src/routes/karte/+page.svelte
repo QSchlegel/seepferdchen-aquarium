@@ -127,13 +127,24 @@
 </div>
 
 <style>
-  .page { padding-bottom: 92px; }
+  /* the chart is square, so a tall phone has water left over underneath it:
+     centre it in what is left rather than hanging it off the top */
+  .page {
+    padding-bottom: calc(92px + var(--edge-bottom));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
   .chart {
     position: relative;
-    width: min(600px, calc(100vw - 20px));
+    flex: none;
+    /* capped by the height as well as the width, or a phone held sideways
+       pushes three of the nine places off the bottom of the screen */
+    width: min(600px, calc(100vw - 20px), calc(100vh - 130px));
+    width: min(600px, calc(100vw - 20px), calc(100dvh - 130px));
     aspect-ratio: 1;
-    margin: 4px auto 0;
+    margin: 0 auto;
     border-radius: 28px;
     overflow: hidden;
     background:
@@ -269,9 +280,18 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   @media (max-width: 560px) {
-    .porthole { width: 58px; height: 58px; border-width: 2px; }
-    .icon { font-size: 25px; }
-    .tag { font-size: 10.5px; }
+    .porthole { width: 66px; height: 66px; border-width: 2px; }
+    .icon { font-size: 28px; }
+    .tag { font-size: 11px; }
     .chart { border-radius: 22px; }
+  }
+
+  /* sideways: the chart is down to about 260px, so the portholes shrink with
+     it — but never below a thumb's worth */
+  @media (max-height: 460px) {
+    .porthole { width: 52px; height: 52px; }
+    .icon { font-size: 22px; }
+    .tag { font-size: 10px; }
+    .you { top: -11px; font-size: 14px; }
   }
 </style>

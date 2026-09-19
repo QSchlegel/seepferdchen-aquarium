@@ -44,6 +44,36 @@ pause button showed the wrong icon for a while. Report outward via callbacks.
 computed its bounding box once, so the maker's preview drew every later body
 with the *first* one's fit. A unicorn scaled as a fish came out as a smear.
 
+## The edges of the screen
+
+A phone keeps a strip at the bottom for the home bar and, held sideways, a
+strip at one side for the notch. iOS treats a swipe that starts in the bottom
+strip as a system gesture, so the **first tap on anything sitting there does
+nothing at all**.
+
+> The menu button — the one control on every screen — was pinned 12px from the
+> bottom. On a notched phone it needed two taps, every time, and there was no
+> way for a child to work out why.
+
+Everything pinned to an edge measures from `--edge-top`/`-bottom`/`-left`/
+`-right` (`app.css`), which are `env(safe-area-inset-*)` and therefore zero on
+a desktop and on any phone without cutouts. `viewport-fit=cover` in `app.html`
+is what makes the browser report them at all.
+
+`src/test/edges.test.ts` reads every component's CSS and fails on a `position:
+fixed` rule — or an absolutely positioned child of a `.hud` — that pins itself
+to an edge without them. It also catches a page that re-states `.page`'s
+bottom padding and drops the inset with it, which is how the map and the maker
+both lost theirs.
+
+## One control, several fingers
+
+A five-year-old does not use a touchscreen one finger at a time. The tank
+tracks its pointers in a `Map` keyed by `pointerId`: with a single drag object
+the second finger took the first one's place, so only the last one stirred the
+water, lifting either one stopped the other's bubbles, and a tap anywhere
+cancelled a journey somebody was holding a doorway open for.
+
 ## Terrain collision
 
 Correcting only downwards leaves a swimmer pressed into a steep outcrop with

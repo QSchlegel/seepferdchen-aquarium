@@ -24,7 +24,7 @@
   .tally {
     position: absolute;
     left: 50%;
-    top: calc(10px + env(safe-area-inset-top));
+    top: calc(10px + var(--edge-top));
     transform: translateX(-50%);
     display: flex;
     flex-wrap: wrap;

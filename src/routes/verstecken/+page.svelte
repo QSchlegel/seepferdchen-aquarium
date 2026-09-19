@@ -13,6 +13,7 @@
   import { GALLERY, sameCharacter } from '$lib/data/cast';
   import { settings } from '$lib/stores/settings';
   import { sfx } from '$lib/audio';
+  import { short } from '$lib/stores/viewport';
   import { onMount } from 'svelte';
   import type { World } from '$lib/sim/world';
   import type { Creature, CreatureSpec } from '$lib/sim/types';
@@ -85,7 +86,7 @@
 <div class="hud">
   {#if target}
     <div class="card seek" class:right={verdict === 'right'} class:wrong={verdict === 'wrong'}>
-      <CreaturePortrait spec={target} size={104} />
+      <CreaturePortrait spec={target} size={$short ? 72 : 104} />
       {#if verdict === 'right'}<span class="tick">🎉</span>{/if}
     </div>
   {/if}
@@ -103,7 +104,7 @@
   .seek {
     position: absolute;
     left: 50%;
-    top: calc(12px + env(safe-area-inset-top));
+    top: calc(12px + var(--edge-top));
     transform: translateX(-50%);
     padding: 8px 10px;
     display: flex;
@@ -123,7 +124,7 @@
   .tally {
     position: absolute;
     left: 50%;
-    top: calc(150px + env(safe-area-inset-top));
+    top: calc(150px + var(--edge-top));
     transform: translateX(-50%);
     display: flex;
     flex-wrap: wrap;
@@ -136,8 +137,8 @@
 
   .eye {
     position: absolute;
-    right: 12px;
-    bottom: calc(96px + env(safe-area-inset-bottom));
+    right: calc(12px + var(--edge-right));
+    bottom: calc(16px + var(--edge-bottom));
     pointer-events: auto;
     font-size: 24px;
     padding: 10px 14px;
@@ -145,7 +146,10 @@
   .eye:active { transform: scale(0.93); }
   .eye.on { background: rgba(255, 209, 102, 0.75); border-color: #fff; }
 
-  @media (max-height: 430px) {
+  @media (max-height: 460px) {
+    /* sideways there is no room for a row of stars under the card */
     .tally { display: none; }
+    .seek { padding: 5px 7px; }
+    .tick { font-size: 24px; }
   }
 </style>

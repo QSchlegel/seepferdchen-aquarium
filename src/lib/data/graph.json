@@ -19,7 +19,7 @@
       "label": "audio",
       "layer": "lib",
       "loc": 144,
-      "fanIn": 11
+      "fanIn": 12
     },
     {
       "id": "src/lib/components/CreaturePortrait.svelte",
@@ -32,7 +32,7 @@
       "id": "src/lib/components/Joystick.svelte",
       "label": "Joystick",
       "layer": "component",
-      "loc": 186,
+      "loc": 197,
       "fanIn": 1
     },
     {
@@ -53,21 +53,21 @@
       "id": "src/lib/components/Nav.svelte",
       "label": "Nav",
       "layer": "component",
-      "loc": 166,
+      "loc": 191,
       "fanIn": 1
     },
     {
       "id": "src/lib/components/SettingsSheet.svelte",
       "label": "SettingsSheet",
       "layer": "component",
-      "loc": 89,
+      "loc": 106,
       "fanIn": 1
     },
     {
       "id": "src/lib/components/Tank.svelte",
       "label": "Tank",
       "layer": "component",
-      "loc": 278,
+      "loc": 305,
       "fanIn": 2
     },
     {
@@ -162,6 +162,13 @@
       "fanIn": 13
     },
     {
+      "id": "src/lib/stores/viewport.ts",
+      "label": "viewport",
+      "layer": "store",
+      "loc": 39,
+      "fanIn": 4
+    },
+    {
       "id": "src/lib/tilt.ts",
       "label": "tilt",
       "layer": "lib",
@@ -186,28 +193,28 @@
       "id": "src/routes/+page.svelte",
       "label": "/",
       "layer": "route",
-      "loc": 358,
+      "loc": 372,
       "fanIn": 0
     },
     {
       "id": "src/routes/admin/+page.svelte",
       "label": "/admin",
       "layer": "route",
-      "loc": 265,
+      "loc": 273,
       "fanIn": 0
     },
     {
       "id": "src/routes/geschichte/+page.svelte",
       "label": "/geschichte",
       "layer": "route",
-      "loc": 61,
+      "loc": 117,
       "fanIn": 0
     },
     {
       "id": "src/routes/karte/+page.svelte",
       "label": "/karte",
       "layer": "route",
-      "loc": 278,
+      "loc": 298,
       "fanIn": 0
     },
     {
@@ -221,7 +228,7 @@
       "id": "src/routes/machen/+page.svelte",
       "label": "/machen",
       "layer": "route",
-      "loc": 258,
+      "loc": 332,
       "fanIn": 0
     },
     {
@@ -235,21 +242,21 @@
       "id": "src/routes/steckbriefe/+page.svelte",
       "label": "/steckbriefe",
       "layer": "route",
-      "loc": 76,
+      "loc": 84,
       "fanIn": 0
     },
     {
       "id": "src/routes/tippen/+page.svelte",
       "label": "/tippen",
       "layer": "route",
-      "loc": 226,
+      "loc": 263,
       "fanIn": 0
     },
     {
       "id": "src/routes/verstecken/+page.svelte",
       "label": "/verstecken",
       "layer": "route",
-      "loc": 152,
+      "loc": 156,
       "fanIn": 0
     },
     {
@@ -505,6 +512,14 @@
     },
     {
       "source": "src/routes/geschichte/+page.svelte",
+      "target": "src/lib/stores/viewport.ts"
+    },
+    {
+      "source": "src/routes/geschichte/+page.svelte",
+      "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/routes/geschichte/+page.svelte",
       "target": "src/lib/data/i18n.ts"
     },
     {
@@ -557,6 +572,10 @@
     },
     {
       "source": "src/routes/machen/+page.svelte",
+      "target": "src/lib/stores/viewport.ts"
+    },
+    {
+      "source": "src/routes/machen/+page.svelte",
       "target": "src/lib/audio.ts"
     },
     {
@@ -650,6 +669,10 @@
     {
       "source": "src/routes/tippen/+page.svelte",
       "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/routes/tippen/+page.svelte",
+      "target": "src/lib/stores/viewport.ts"
     },
     {
       "source": "src/routes/tippen/+page.svelte",
@@ -682,6 +705,10 @@
     {
       "source": "src/routes/verstecken/+page.svelte",
       "target": "src/lib/audio.ts"
+    },
+    {
+      "source": "src/routes/verstecken/+page.svelte",
+      "target": "src/lib/stores/viewport.ts"
     },
     {
       "source": "src/routes/verstecken/+page.svelte",
