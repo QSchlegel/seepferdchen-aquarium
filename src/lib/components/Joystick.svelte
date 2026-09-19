@@ -133,8 +133,9 @@
     z-index: 42;
     touch-action: none;
     border-radius: 26px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.28);
+    background: var(--chip);
+    border: 2px solid var(--chip-line);
+    opacity: 0.8;
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     display: grid;
@@ -144,8 +145,8 @@
   .ring {
     width: 96px; height: 96px;
     border-radius: 50%;
-    border: 3px solid rgba(255, 255, 255, 0.5);
-    background: rgba(255, 255, 255, 0.14);
+    border: 3px solid var(--chip-line);
+    background: var(--chip);
     display: grid;
     place-items: center;
     transition: opacity 0.15s ease;
@@ -171,8 +172,9 @@
     align-items: center;
     gap: 2px;
     font-size: 15px;
-    color: rgba(255, 255, 255, 0.75);
-    text-shadow: 0 1px 3px rgba(0, 35, 60, 0.7);
+    color: var(--chip-ink);
+    opacity: 0.8;
+    text-shadow: var(--chip-shadow);
     pointer-events: none;
   }
   .dot { opacity: 0.5; }

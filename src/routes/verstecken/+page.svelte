@@ -144,7 +144,7 @@
     padding: 10px 14px;
   }
   .eye:active { transform: scale(0.93); }
-  .eye.on { background: rgba(255, 209, 102, 0.75); border-color: #fff; }
+  .eye.on { background: var(--chip-lit); border-color: #fff; }
 
   @media (max-height: 460px) {
     /* sideways there is no room for a row of stars under the card */

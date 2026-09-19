@@ -226,3 +226,45 @@ export function portalsOf(id: SceneId): { to: SceneId; at: [number, number] }[] 
   return links.slice(0, 3).map((to, i) => ({ to, at: SLOTS[i] ?? SLOTS[1] }));
 }
 export const DEFAULT_SCENE: SceneId = 'riff';
+
+/* ------------------------------------------------ what colour the buttons are */
+
+/** The dark blue the cards are written in. Also the app's `--ink`. */
+const INK = '#10394f';
+
+/** sRGB relative luminance: 0 is black, 1 is white. */
+export function lightness(hex: string): number {
+  const channel = (i: number) => {
+    const v = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+}
+
+/** How far apart two colours are to look at: 1 is invisible, 21 is black on white. */
+export function contrast(a: string, b: string): number {
+  const [light, dark] = [lightness(a), lightness(b)].sort((x, y) => y - x);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+/**
+ * Which way round the floating controls have to be in this place.
+ *
+ * They are white frosted glass with white icons, which works over the deep
+ * blue of the trench and the cave — and disappears completely over the pearl
+ * beds, the ice sea and the lagoon, where the water at the surface is almost
+ * white. Measured: white on the pearl beds is a contrast ratio of 1.1, which
+ * is to say none at all. Six of the nine places were like that; the reef only
+ * got away with it because of the border round each pill.
+ *
+ * A button she cannot see is a button she cannot press, and she cannot read
+ * the label to find out what she is missing. So each place says which ink
+ * wins against its own water, and the chrome follows it.
+ */
+export function chromeInk(id: SceneId): 'light' | 'dark' {
+  const scene = SCENES[id];
+  // the top bar sits over the surface, the corner buttons over the sand
+  const behind = [scene.water[0], scene.water[1], scene.sand[0]];
+  const worst = (ink: string) => Math.min(...behind.map((c) => contrast(ink, c)));
+  return worst(INK) > worst('#ffffff') ? 'dark' : 'light';
+}

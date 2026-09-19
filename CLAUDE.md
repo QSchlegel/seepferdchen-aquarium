@@ -67,6 +67,10 @@ Learn these rather than rediscovering them:
   a corner of the tank. Every test of it used a 900px screen. See
   [The Tank](vault/The%20Tank.md); the cast also drifts back towards whatever
   the camera is looking at, which is the other half of a full tank.
+- **The floating controls are not always white.** They sit over water that is
+  repainted nine ways; white glass vanishes over the pale places. Take their
+  colours from the `--chip-*` tokens in `app.css`, which follow `chromeInk()`
+  for the place she is in.
 - **A phone eats taps at the edges of the screen.** Anything pinned to an edge
   measures from `--edge-top`/`-bottom`/`-left`/`-right` in `app.css`, never
   from 0. The menu button sat in the home bar and needed two taps, every time.

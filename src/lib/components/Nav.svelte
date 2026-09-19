@@ -79,8 +79,9 @@
       width: 64px;
       height: 64px;
       border-radius: 22px;
-      border: 2px solid rgba(255, 255, 255, 0.5);
-      background: rgba(255, 255, 255, 0.24);
+      border: 2px solid var(--chip-line);
+      background: var(--chip);
+      color: var(--chip-ink);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       cursor: pointer;
@@ -90,8 +91,8 @@
       transition: transform 0.15s ease, background 0.2s ease;
     }
     .opener .icon { font-size: 30px; }
-    .opener:hover { background: rgba(255, 255, 255, 0.36); transform: translateY(-2px); }
-    .opener.on { background: rgba(255, 255, 255, 0.44); }
+    .opener:hover { background: var(--chip-press); transform: translateY(-2px); }
+    .opener.on { background: var(--chip-press); }
 
     .scrim {
       position: fixed;
@@ -117,7 +118,7 @@
       gap: 10px;
       padding: 14px;
       border-radius: 26px;
-      border: 2px solid rgba(255, 255, 255, 0.42);
+      border: 2px solid var(--chip-line);
       background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
@@ -134,15 +135,15 @@
       gap: 6px;
       min-height: 92px;
       border-radius: 18px;
-      border: 2px solid rgba(255, 255, 255, 0.34);
-      background: rgba(255, 255, 255, 0.16);
-      color: #fff;
+      border: 2px solid var(--chip-line);
+      background: var(--chip);
+      color: var(--chip-ink);
       text-decoration: none;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+      text-shadow: var(--chip-shadow);
       transition: transform 0.12s ease, background 0.2s ease;
     }
-    .card:hover { background: rgba(255, 255, 255, 0.34); transform: translateY(-3px); }
-    .card.active { background: rgba(255, 209, 102, 0.42); border-color: #ffd166; }
+    .card:hover { background: var(--chip-press); transform: translateY(-3px); }
+    .card.active { background: var(--chip-lit); border-color: #ffd166; }
     .big { font-size: 34px; line-height: 1; }
     .name { font-size: 13px; font-weight: 700; }
 

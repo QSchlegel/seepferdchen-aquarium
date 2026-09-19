@@ -91,6 +91,22 @@ Chrome's "offline" checkbox is not the same thing: under it `fetch()` inside a
 worker resolves with a synthetic 404 instead of rejecting, so the fallback
 path never runs.
 
+## White chrome over a world that repaints itself
+
+The buttons float over a canvas whose colours change nine ways. White frosted
+glass was chosen against the reef and never checked against the rest.
+
+> The Perlenbank is nearly white at the surface. She travelled there and the
+> counter, the menu button, the feed button and the quest line all simply
+> stopped being visible — contrast ratio 1.1. She cannot read the labels to
+> work out what she is missing, so a button she cannot see is a button that
+> does not exist.
+
+`chromeInk()` in `scenes.ts` picks the ink per place; `scenes.test.ts` holds
+every place to 3:1. Any floating control has to take its colours from the
+`--chip-*` tokens rather than hard-coding white, or it will be the one that
+disappears.
+
 ## Anything sized against the glass has to be tried on a phone
 
 `art.sx()` split the loop at `worldWidth - tankWidth - 700`. On a desktop that

@@ -31,7 +31,10 @@ much as the creatures: the story's page dots are 12px to look at and 44px to
 hit, and the food buttons are square rather than letterbox for the same reason.
 
 And a target is only generous if the device lets her reach it — see
-[[Gotchas#The edges of the screen]].
+[[Gotchas#The edges of the screen]] — and only a target at all if she can see
+it. The controls float over water that is repainted nine different ways, so
+each place says whether they are drawn in white or in ink; see
+[[The Nine Places#The buttons change colour with the water]].
 
 ## 5. The phone is the device
 

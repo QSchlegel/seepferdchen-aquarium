@@ -5,8 +5,9 @@
    * Walls block but never punish: the swimmer slides along them, there is no
    * timer and no way to lose. Finishing regenerates a fresh maze.
    */
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import * as art from '$lib/art';
+  import { chromeInk } from '$lib/data/scenes';
   import { atGoal, generateMaze, resolve, type Maze } from '$lib/sim/maze';
   import { settings } from '$lib/stores/settings';
   import { sfx } from '$lib/audio';
@@ -14,6 +15,15 @@
   import type { CreatureSpec } from '$lib/sim/types';
 
   let { onwin = () => {} }: { onwin?: () => void } = $props();
+
+  // the maze is painted in whichever place she is in, so the menu button has
+  // to read against that water too — see `chromeInk`
+  $effect(() => {
+    document.documentElement.dataset.chrome = chromeInk($settings.scene);
+  });
+  onDestroy(() => {
+    if (typeof document !== 'undefined') delete document.documentElement.dataset.chrome;
+  });
 
   let canvas: HTMLCanvasElement;
   let host: HTMLDivElement;
