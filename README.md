@@ -5,7 +5,8 @@ An aquarium you can play with, from the world of the *Seepferdchenhof* books.
 **Play it here → [lucilleschlegel.com](https://lucilleschlegel.com)**
 
 Tap a fish and it says hello. Feed them — but not everyone likes the same food.
-Find the hidden golden key and unlock the treasure chest. Swim off to eight
+Find the hidden golden key and unlock the treasure chest. Tip the phone and the
+window slides along the sea, which is several screens wide. Swim off to eight
 other places. Build your own creature and watch it join the others.
 
 ## 📲 Put it on the phone

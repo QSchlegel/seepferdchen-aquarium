@@ -39,7 +39,7 @@
       "id": "src/lib/components/Maze.svelte",
       "label": "Maze",
       "layer": "component",
-      "loc": 233,
+      "loc": 239,
       "fanIn": 1
     },
     {
@@ -67,7 +67,7 @@
       "id": "src/lib/components/Tank.svelte",
       "label": "Tank",
       "layer": "component",
-      "loc": 318,
+      "loc": 324,
       "fanIn": 2
     },
     {
@@ -81,7 +81,7 @@
       "id": "src/lib/data/i18n.ts",
       "label": "i18n",
       "layer": "data",
-      "loc": 86,
+      "loc": 89,
       "fanIn": 10
     },
     {
@@ -137,7 +137,7 @@
       "id": "src/lib/sim/world.ts",
       "label": "world",
       "layer": "sim",
-      "loc": 1557,
+      "loc": 1598,
       "fanIn": 3
     },
     {
@@ -200,7 +200,7 @@
       "id": "src/routes/+page.svelte",
       "label": "/",
       "layer": "route",
-      "loc": 375,
+      "loc": 416,
       "fanIn": 0
     },
     {

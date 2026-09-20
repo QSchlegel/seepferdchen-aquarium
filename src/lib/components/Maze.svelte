@@ -7,7 +7,7 @@
    */
   import { onDestroy, onMount } from 'svelte';
   import * as art from '$lib/art';
-  import { chromeInk } from '$lib/data/scenes';
+  import { SCENES, chromeInk } from '$lib/data/scenes';
   import { atGoal, generateMaze, resolve, type Maze } from '$lib/sim/maze';
   import { settings } from '$lib/stores/settings';
   import { sfx } from '$lib/audio';
@@ -19,10 +19,16 @@
   // the maze is painted in whichever place she is in, so the menu button has
   // to read against that water too — see `chromeInk`
   $effect(() => {
-    document.documentElement.dataset.chrome = chromeInk($settings.scene);
+    const root = document.documentElement;
+    root.dataset.chrome = chromeInk($settings.scene);
+    // and the sea floor of this place, for any strip the browser keeps for
+    // itself at the edges of the screen — see --room in app.css
+    root.style.setProperty('--room', SCENES[$settings.scene].sand[1]);
   });
   onDestroy(() => {
-    if (typeof document !== 'undefined') delete document.documentElement.dataset.chrome;
+    if (typeof document === 'undefined') return;
+    delete document.documentElement.dataset.chrome;
+    document.documentElement.style.removeProperty('--room');
   });
 
   let canvas: HTMLCanvasElement;

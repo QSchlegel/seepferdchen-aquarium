@@ -6,7 +6,7 @@
   import { onDestroy, onMount } from 'svelte';
   import { World, type HuntStage, type KeyEffect } from '$lib/sim/world';
   import { setScene } from '$lib/art';
-  import { chromeInk } from '$lib/data/scenes';
+  import { SCENES, chromeInk } from '$lib/data/scenes';
   import { CAST } from '$lib/data/cast';
   import { mine, toSpec } from '$lib/stores/mine';
   import { settings } from '$lib/stores/settings';
@@ -181,10 +181,16 @@
    * everywhere else the background is the app's own blue and white is right.
    */
   $effect(() => {
-    document.documentElement.dataset.chrome = chromeInk($settings.scene);
+    const root = document.documentElement;
+    root.dataset.chrome = chromeInk($settings.scene);
+    // and the sea floor of this place, for any strip the browser keeps for
+    // itself at the edges of the screen — see --room in app.css
+    root.style.setProperty('--room', SCENES[$settings.scene].sand[1]);
   });
   onDestroy(() => {
-    if (typeof document !== 'undefined') delete document.documentElement.dataset.chrome;
+    if (typeof document === 'undefined') return;
+    delete document.documentElement.dataset.chrome;
+    document.documentElement.style.removeProperty('--room');
   });
 
   /* ------------------------------------------------------------ gestures */

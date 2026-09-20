@@ -63,7 +63,18 @@ html, body {
   overflow: hidden;
   font-family: var(--font);
   color: #fff;
-  background: linear-gradient(var(--water-top) 0%, #77d3d6 22%, var(--water-mid) 50%, #1f7ba8 78%, var(--water-deep) 100%);
+  /**
+   * The gradient paints the page. The flat colour underneath it is what the
+   * browser uses for any strip it keeps for its own furniture — iOS Safari
+   * reserves about 50pt at the bottom for its bar — and with no colour set
+   * that strip came out white, a band of nothing under the sea floor.
+   *
+   * `--room` is the floor of the place she is in, set by the tank, so the
+   * strip reads as more sea floor rather than as a seam. Everywhere else it
+   * falls back to the deep water the gradient itself ends on.
+   */
+  background-color: var(--room, var(--water-deep));
+  background-image: linear-gradient(var(--water-top) 0%, #77d3d6 22%, var(--water-mid) 50%, #1f7ba8 78%, var(--water-deep) 100%);
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;

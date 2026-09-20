@@ -115,6 +115,36 @@ already on screen, which is what hide and seek does: there is no "away" to
 come back from, and a tide would only bunch everyone in the middle of a game
 about looking.
 
+## Leaning the tablet to look along the sea
+
+The 🧭 button turns the gyroscope on; tipping the tablet then slides the
+window along the sea, and holding it straight stops it where it is. Turning
+the button off drifts the view back to the first screen, where the doorways,
+the key and the chest live.
+
+It exists because the sea is three to five screens wide and the only other way
+to see any of it was to feed a creature until it was tame and then ride it —
+several steps in, and a long way past what a five-year-old will find on her
+own. She is already holding the tablet. Tipping it needs no reading, no aim
+and no fine motor control, and it undoes itself.
+
+Details that matter:
+
+- **Eased, not direct.** A hand-held tablet is never still, and an un-eased
+  camera reads as a judder. `LOOK_SPEED` is 300px a second at full lean, which
+  crosses a three-screen sea in about five seconds.
+- **Level means stop, not spring back.** She can lean over to a stretch of sea
+  and then hold the tablet still to watch it.
+- **The reins win.** Leaning while riding does not drag the view off the animal
+  she is steering.
+- **A one-screen sea does not slide** — hide and seek would only lose her the
+  creature she is hunting.
+- **The tide follows the glass**, so wherever she looks, the cast drifts over
+  to her rather than leaving her an empty stretch of water.
+
+The pearl game uses the same sensor for something else, so starting one stops
+the other.
+
 ## Taming and riding
 
 Feed a creature its favourite and its trust grows — a ring fills over its head.

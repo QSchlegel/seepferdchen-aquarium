@@ -131,4 +131,24 @@ it inherited from .page in app.css:\n  ${wrong.join('\n  ')}\n`).toEqual([]);
     const stray = FILES.filter(([, source]) => source.includes('env(safe-area-inset')).map(([f]) => f);
     expect(stray, `use var(--edge-…) from app.css rather than env() directly: ${stray}`).toEqual([]);
   });
+
+  /**
+   * A browser keeps a strip of the screen for its own furniture — iOS Safari
+   * reserves about 50pt at the bottom for its bar — and paints it with the
+   * page's root background *colour*. The app set only a gradient, so that
+   * colour was transparent, and a band of white appeared under the sea.
+   */
+  it('gives the browser a sea colour for any strip it keeps for itself', () => {
+    const root = SHEETS.flatMap(([, css]) => rules(css))
+      .filter((r) => /(^|,)\s*(html|body)\b/.test(r.selector));
+    expect(root.length, 'no html/body rule found').toBeGreaterThan(0);
+    const colours = root.map((r) => declaration(r.body, 'background-color')).filter(Boolean);
+    expect(colours.length, 'html/body sets no background-color, so the strip is white')
+      .toBeGreaterThan(0);
+    // and a gradient must not be shorthanded over it again
+    for (const r of root) {
+      const shorthand = declaration(r.body, 'background');
+      expect(shorthand, `background: ${shorthand} wipes out the background-color`).toBeNull();
+    }
+  });
 });
