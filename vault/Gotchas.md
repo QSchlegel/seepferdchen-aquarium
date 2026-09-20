@@ -91,6 +91,34 @@ Chrome's "offline" checkbox is not the same thing: under it `fetch()` inside a
 worker resolves with a synthetic 404 instead of rejecting, so the fallback
 path never runs.
 
+## The browser keeps a strip of the screen, and paints it with your background
+
+iOS Safari reserves about 50pt at the bottom of the screen for its own bar.
+Whatever the page does not cover there, the browser fills with the root
+element's background **colour**.
+
+> `html, body` had only a gradient, so the computed background-colour was
+> transparent — which is to say white. A photograph from a real iPhone came
+> back with a 52pt band of white across the bottom of the tank, under the sea
+> floor.
+
+`--room` now holds the floor colour of the place she is in, `app.css` sets
+`background-color: var(--room, …)`, and the tank updates it with the scene. An
+`edges.test.ts` case fails if `html`/`body` ever goes back to a bare gradient.
+
+The `interactive-widget=resizes-content` token in the viewport meta went at the
+same time: it was there to lift the maker's name box above the keyboard, which
+the maker already does for itself, and it is the one thing that can make Safari
+reserve that strip in the first place.
+
+## Vitest hands you an empty string for a stylesheet
+
+`import.meta.glob('…*.css', { query: '?raw' })` returns `''` for every file
+unless `css: true` is set in `vitest.config.ts`. Vitest stubs stylesheets by
+default, so a test that reads CSS quietly passes while checking nothing — the
+safe-area test was doing exactly that for `app.css`, the one file that defines
+`.page`.
+
 ## White chrome over a world that repaints itself
 
 The buttons float over a canvas whose colours change nine ways. White frosted

@@ -170,4 +170,98 @@ describe('the glass she is looking at', () => {
     run(w, 10);
     expect(w.fedTotal).toBeGreaterThan(0);
   });
+
+  /**
+   * Leaning the tablet to look along the sea.
+   *
+   * The sea is three to five screens wide, and until now the only way to see
+   * any of it but the first screen was to feed a creature until it was tame
+   * and then ride it — which is a long way in for a five-year-old. She is
+   * already holding the tablet; tipping it is the one control she cannot fail
+   * to find, and it undoes itself the moment she holds it straight.
+   */
+  it('slides the view along the sea when she leans', () => {
+    const w = tank();
+    w.looking = true;
+    w.setTilt(1, 0);
+    run(w, 1.5);
+    const moved = wrapDelta(0, w.camera);
+    expect(moved, 'leaning right did not take her right').toBeGreaterThan(150);
+    expect(moved, 'and not halfway across the sea in a second and a half')
+      .toBeLessThan(w.worldWidth / 2);
+  });
+
+  it('goes the other way when she leans the other way', () => {
+    const w = tank();
+    w.looking = true;
+    w.setTilt(-1, 0);
+    run(w, 1.5);
+    expect(wrapDelta(0, w.camera)).toBeLessThan(-150);
+  });
+
+  it('stops where she stops, rather than springing back', () => {
+    const w = tank();
+    w.looking = true;
+    w.setTilt(1, 0);
+    run(w, 1.5);
+    const stopped = w.camera;
+
+    // held straight again: it coasts to a halt and stays out here, so she can
+    // watch a stretch of sea without having to hold a pose
+    w.setTilt(0, 0);
+    run(w, 4);
+    expect(Math.abs(wrapDelta(stopped, w.camera)), 'it kept sliding').toBeLessThan(110);
+    expect(Math.abs(wrapDelta(0, w.camera)), 'it sprang back home').toBeGreaterThan(120);
+  });
+
+  it('comes home when she stops looking', () => {
+    const w = tank();
+    w.looking = true;
+    w.setTilt(1, 0);
+    run(w, 1.5);
+    expect(Math.abs(wrapDelta(0, w.camera))).toBeGreaterThan(150);
+
+    // the doorways, the key and the chest all live in the first screen, so
+    // putting the lean away has to bring her back to them
+    w.looking = false;
+    w.setTilt(0, 0);
+    run(w, 12);
+    expect(Math.abs(wrapDelta(0, w.camera)), 'never found its way home').toBeLessThan(20);
+  });
+
+  it('brings the animals with her', () => {
+    const w = tank();
+    w.looking = true;
+    w.setTilt(1, 0);
+    run(w, 3);
+    w.setTilt(0, 0);
+    // the tide follows the glass, not the origin: wherever she looks, the
+    // cast drifts over to her rather than leaving her an empty stretch
+    run(w, 60);
+    expect(onGlass(w).length, 'she looked away and everyone stayed behind')
+      .toBeGreaterThan(w.creatures.length * 0.3);
+  });
+
+  it('gives the reins the last word', () => {
+    const w = tank();
+    const mount = w.creatures.find((c) => c.mode === 'swim')!;
+    mount.tame = true;
+    mount.speed = 0;
+    mount.x = wrapWorld(w.worldWidth / 2);
+    w.drive(mount);
+    w.looking = true;
+    w.setTilt(1, 0);     // leaning while riding must not drag the view off her
+    run(w, 3);
+    expect(Math.abs(wrapDelta(w.camera + w.width / 2, mount.x))).toBeLessThan(w.width / 2);
+  });
+
+  it('does not slide a sea that is only one screen wide', () => {
+    // hide and seek: there is nowhere to look, and sliding would only take the
+    // animal she is hunting off the screen
+    const w = tank(PHONE[0], PHONE[1], 1);
+    w.looking = true;
+    w.setTilt(1, 0);
+    run(w, 3);
+    expect(w.camera).toBe(0);
+  });
 });

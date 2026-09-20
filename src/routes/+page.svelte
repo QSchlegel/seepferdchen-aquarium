@@ -49,6 +49,10 @@
   let pearls = $state(0);
   let stopTilt: (() => void) | null = null;
 
+  /* leaning the tablet to look along the sea */
+  let looking = $state(false);
+  let stopLook: (() => void) | null = null;
+
   const questKey = $derived(
     hunt === 'carried' ? 'keyFound' : hunt === 'open' ? 'chestOpen' : 'findKey'
   );
@@ -65,13 +69,43 @@
       clearInterval(ticker);
       clearTimeout(hint);
       endTilt();
+      endLook();
     };
   });
+
+  /**
+   * Leaning the tablet slides the window along the sea — the whole sea, not
+   * just the screen she opened on. The only other way there is to tame an
+   * animal and ride it, which is a long way in for a five-year-old.
+   *
+   * iOS only grants the sensor from inside a real tap, so this runs on click.
+   */
+  async function toggleLook() {
+    if (looking) { endLook(); return; }
+    if (!world) return;
+    endTilt();                         // the pearl game wants the same sensor
+    const stop = await startTilt((t) => world?.setTilt(t.x, t.y));
+    if (!stop) { tiltNote = t('tiltDenied', $settings.lang); return; }
+    stopLook = stop;
+    looking = true;
+    world.looking = true;
+    tiltNote = t('lookHint', $settings.lang);
+    hintVisible = false;
+  }
+
+  function endLook() {
+    stopLook?.();
+    stopLook = null;
+    looking = false;
+    if (world) world.looking = false;
+    if (!tilting) tiltNote = '';
+  }
 
   /** iOS only grants the sensor from inside a real tap, so this runs on click. */
   async function toggleTilt() {
     if (tilting) { endTilt(); return; }
     if (!world) return;
+    endLook();                         // one sensor, one game at a time
     const stop = await startTilt((t) => world?.setTilt(t.x, t.y));
     if (!stop) { tiltNote = t('tiltDenied', $settings.lang); return; }
     stopTilt = stop;
@@ -152,6 +186,13 @@
     {/if}
     <div class="spacer"></div>
     {#if canTilt}
+      <button
+        class="chip small"
+        class:on={looking}
+        onclick={toggleLook}
+        aria-pressed={looking}
+        aria-label={t('look', $settings.lang)}
+      >🧭</button>
       <button
         class="chip small"
         class:on={tilting}

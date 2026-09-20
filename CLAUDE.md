@@ -67,6 +67,11 @@ Learn these rather than rediscovering them:
   a corner of the tank. Every test of it used a 900px screen. See
   [The Tank](vault/The%20Tank.md); the cast also drifts back towards whatever
   the camera is looking at, which is the other half of a full tank.
+- **A stylesheet read in a test is empty unless `css: true`.** Vitest stubs CSS,
+  so `?raw` gives `''` and the test passes while checking nothing.
+- **The browser paints its own reserved strip with your root background
+  colour.** `html`/`body` needs a `background-color`, not only a gradient, or
+  iOS Safari's bottom bar leaves a band of white under the sea.
 - **The floating controls are not always white.** They sit over water that is
   repainted nine ways; white glass vanishes over the pale places. Take their
   colours from the `--chip-*` tokens in `app.css`, which follow `chromeInk()`

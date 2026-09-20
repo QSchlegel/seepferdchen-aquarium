@@ -102,6 +102,13 @@ const TRAVEL_HOLD = 1.1;
 /** How long the swim between places takes. */
 const TRAVEL_SECONDS = 1.5;
 
+/**
+ * How fast a full lean slides the window, in pixels a second. At this speed a
+ * three-screen sea takes about five seconds end to end on a phone: fast enough
+ * to be worth doing, slow enough that she can stop where she means to.
+ */
+const LOOK_SPEED = 300;
+
 /** How long the chest stays open before the hunt starts over. */
 const CHEST_OPEN_SECONDS = 9;
 
@@ -175,6 +182,19 @@ export class World {
 
   /** Where she is leaning, -1 to 1. Slides the reef layers for parallax. */
   look = { x: 0, y: 0 };
+
+  /**
+   * Leaning the tablet to look along the sea.
+   *
+   * The sea is three to five screens wide and until now the only way to see
+   * the rest of it was to tame something and ride it — which is a long way in
+   * for a five-year-old. Tipping the tablet is not: she is already holding it,
+   * it needs no button she has to find, and it undoes itself the moment she
+   * holds it straight again.
+   */
+  looking = false;
+  /** The current sliding speed, eased, so a wobble of the hand does not jolt. */
+  private panned = 0;
 
   /** Where she last touched the water. Nosy creatures come to look. */
   poke: { x: number; y: number; age: number } | null = null;
@@ -711,12 +731,17 @@ export class World {
   private stepDriving(dt: number) {
     const c = this.driving;
     if (!c) {
+      // she is leaning the tablet to look along the sea
+      if (this.looking && this.worldWidth > this.width * 1.2) { this.stepLooking(dt); return; }
       // nobody at the reins: drift gently back to the start of the sea
+      this.panned = 0;
       const home = art.wrapDelta(this.camera, 0);
       this.camera = art.wrapWorld(this.camera + home * Math.min(1, dt * 0.6));
       art.setCamera(this.camera);
       return;
     }
+    // the reins win over the lean: she is steering an animal, not the window
+    this.panned = 0;
 
     const push = c.speed * 2.6;
     c.vx += (this.steer.x * push - c.vx) * Math.min(1, dt * 4);
@@ -730,6 +755,22 @@ export class World {
     const want = art.wrapWorld(c.x - this.width / 2);
     const d = art.wrapDelta(this.camera, want);
     this.camera = art.wrapWorld(this.camera + d * Math.min(1, dt * 3.5));
+    art.setCamera(this.camera);
+  }
+
+  /**
+   * Slide the window along the sea at the speed she is leaning.
+   *
+   * Eased rather than direct, because a hand-held tablet is never still and
+   * an un-eased camera reads as a judder. Level means stopped, not "return to
+   * the middle": she can look at a stretch of sea and stay there, and the view
+   * only drifts home once she stops looking.
+   */
+  private stepLooking(dt: number) {
+    const want = this.tilt.x * LOOK_SPEED;
+    this.panned += (want - this.panned) * Math.min(1, dt * 4.5);
+    if (Math.abs(this.panned) < 1) return;
+    this.camera = art.wrapWorld(this.camera + this.panned * dt);
     art.setCamera(this.camera);
   }
 

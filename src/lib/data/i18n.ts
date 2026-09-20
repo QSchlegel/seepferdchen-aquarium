@@ -77,7 +77,10 @@ const T: Dict = {
   installNow:  { de: 'Installieren',     en: 'Install' },
   installIos:  { de: 'Teilen-Knopf antippen, dann „Zum Home-Bildschirm“',
                  en: 'Tap the share button, then “Add to Home Screen”' },
-  offlineYes:  { de: 'Funktioniert auch ohne Internet', en: 'Works without the internet' }
+  offlineYes:  { de: 'Funktioniert auch ohne Internet', en: 'Works without the internet' },
+  look:        { de: 'Umschauen',       en: 'Look around' },
+  lookHint:    { de: 'Kippe das Gerät und schau dich im Meer um!',
+                 en: 'Tip the device and look around the sea!' }
 };
 
 export function t(key: string, lang: Lang): string {
